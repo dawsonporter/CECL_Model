@@ -4,4 +4,4 @@ plotly
 dash
 dash-bootstrap-components
 gunicorn
-sklearn
+scikit-learn

@@ -1,605 +1,192 @@
 import dash
-
-from dash import dcc, html, Input, Output, State
-
+from dash import dcc, html, Input, Output, State, callback, ALL
 import dash_bootstrap_components as dbc
-
-import numpy as np
-
 import pandas as pd
-
+import numpy as np
 import plotly.graph_objs as go
 
-from sklearn.linear_model import LinearRegression, LogisticRegression
-
-from sklearn.preprocessing import StandardScaler
-
- 
-
-ASSET_POOLS = {
-
-    "Commercial Loans": [
-
-        "Small Business",
-
-        "Middle Market",
-
-        "Large Corporate",
-
-        "Industry-Specific"
-
-    ],
-
-    "Consumer Loans": [
-
-        "Mortgages",
-
-        "Auto Loans",
-
-        "Credit Cards",
-
-        "Personal Loans",
-
-        "Student Loans"
-
-    ],
-
-    "Commercial Real Estate": [
-
-        "Office",
-
-        "Retail",
-
-        "Industrial",
-
-        "Multifamily",
-
-        "Hotel",
-
-        "Healthcare"
-
-    ],
-
-    "Specialized Lending": [
-
-        "Agricultural Loans",
-
-        "Construction Loans",
-
-        "Energy Sector",
-
-        "Technology Sector",
-
-        "Transportation"
-
-    ]
-
-}
-
- 
-
-ECONOMIC_FACTORS = [
-
-    "GDP Growth Rate",
-
-    "Unemployment Rate",
-
-    "Inflation Rate"
-
-]
-
- 
-
-DEFAULT_ECONOMIC_FACTORS = {
-
-    "GDP Growth Rate": 2.5,
-
-    "Unemployment Rate": 5.0,
-
-    "Inflation Rate": 2.0
-
-}
-
- 
-
-INITIAL_WEIGHTS = {
-
-    "Commercial Loans": {
-
-        "Small Business": [-0.4, 0.4, 0.2],
-
-        "Middle Market": [-0.5, 0.3, 0.2],
-
-        "Large Corporate": [-0.6, 0.2, 0.2],
-
-        "Industry-Specific": [-0.5, 0.3, 0.2]
-
-    },
-
-    "Consumer Loans": {
-
-        "Mortgages": [-0.3, 0.5, 0.2],
-
-        "Auto Loans": [-0.3, 0.4, 0.3],
-
-        "Credit Cards": [-0.2, 0.5, 0.3],
-
-        "Personal Loans": [-0.3, 0.5, 0.2],
-
-        "Student Loans": [-0.2, 0.6, 0.2]
-
-    },
-
-    "Commercial Real Estate": {
-
-        "Office": [-0.5, 0.3, 0.2],
-
-        "Retail": [-0.4, 0.4, 0.2],
-
-        "Industrial": [-0.5, 0.3, 0.2],
-
-        "Multifamily": [-0.3, 0.5, 0.2],
-
-        "Hotel": [-0.4, 0.4, 0.2],
-
-        "Healthcare": [-0.3, 0.3, 0.4]
-
-    },
-
-    "Specialized Lending": {
-
-        "Agricultural Loans": [-0.4, 0.2, 0.4],
-
-        "Construction Loans": [-0.5, 0.3, 0.2],
-
-        "Energy Sector": [-0.5, 0.2, 0.3],
-
-        "Technology Sector": [-0.6, 0.2, 0.2],
-
-        "Transportation": [-0.4, 0.3, 0.3]
-
-    }
-
-}
-
- 
-
-def calculate_cecl_reserve(balance, avg_life, hist_loss_rate, prepayment_rate, economic_factors, weights, model_type):
-
-    balance = float(balance)
-
-    avg_life = float(avg_life)
-
-    hist_loss_rate = float(hist_loss_rate) / 100
-
-    prepayment_rate = float(prepayment_rate) / 100
-
-    economic_factors = [float(ef) / 100 for ef in economic_factors]
-
- 
-
-    # Calculate the economic impact factor
-
-    economic_impact = sum(factor * weight for factor, weight in zip(economic_factors, weights))
-
-   
-
-    # Adjust the historical loss rate based on economic factors
-
-    adjusted_loss_rate = hist_loss_rate * (1 + economic_impact)
-
-   
-
-    X = np.array([adjusted_loss_rate, sum(economic_factors)]).reshape(1, -1)
-
-    scaler = StandardScaler()
-
-    X_scaled = scaler.fit_transform(X)
-
-   
-
-    base_loss = balance * adjusted_loss_rate * avg_life
-
- 
-
-    if model_type == "Linear Regression":
-
-        model = LinearRegression()
-
-        y = np.array([base_loss])
-
-        model.fit(X_scaled, y)
-
-        adjusted_loss = model.predict(X_scaled)[0]
-
-    else:  # Logistic Regression
-
-        model = LogisticRegression()
-
-        y = np.array([0, 1])
-
-        X_dummy = np.vstack([X_scaled, X_scaled])
-
-        model.fit(X_dummy, y)
-
-        prob = model.predict_proba(X_scaled)[0][1]
-
-        adjusted_loss = base_loss * prob
-
- 
-
-    # Apply prepayment rate
-
-    cecl_reserve = adjusted_loss * (1 - prepayment_rate)
-
-   
-
-    return max(cecl_reserve, 0)
-
- 
-
-def create_weight_heatmap(weights, title):
-
-    df = pd.DataFrame(weights).T
-
-    df.columns = ECONOMIC_FACTORS
-
-   
-
-    heatmap = go.Figure(data=go.Heatmap(
-
-        z=df.values,
-
-        x=df.columns,
-
-        y=df.index,
-
-        colorscale='RdBu',
-
-        showscale=True,
-
-        zmid=0
-
-    ))
-
-    heatmap.update_layout(
-
-        title=title,
-
-        xaxis_title='Economic Factor',
-
-        yaxis_title='Asset Subcategory',
-
-        height=400,
-
-        margin=dict(l=50, r=50, t=50, b=50)
-
-    )
-
-    return heatmap
-
- 
-
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
+server = app.server
 
- 
+# Define loan pools and economic scenarios
+COMMERCIAL_POOLS = {
+    "C1": "CRE - Office", "C2": "CRE - Retail", "C3": "CRE - Industrial",
+    "C4": "C&I - Large", "C5": "C&I - Middle", "C6": "Small Business", "C7": "Agricultural"
+}
+CONSUMER_POOLS = {
+    "P1": "Res. Mortgages - Fixed", "P2": "Res. Mortgages - Adj.", "P3": "HELOCs",
+    "P4": "Auto - New", "P5": "Auto - Used", "P6": "Credit Cards",
+    "P7": "Personal - Secured", "P8": "Personal - Unsecured", "P9": "Student Loans"
+}
+ALL_POOLS = {**COMMERCIAL_POOLS, **CONSUMER_POOLS}
+ECONOMIC_SCENARIOS = ["Baseline", "Adverse", "Severely Adverse"]
 
-def info_icon(tooltip_text):
+# Default data
+DEFAULT_POOL_DATA = {
+    pool_id: {
+        "balance": 100_000_000, "default-prob": 0.02, "lgd": 0.35,
+        "average-life": 5, "discount-rate": 0.05, "undrawn-percentage": 0.1
+    } for pool_id in ALL_POOLS
+}
+DEFAULT_ECONOMIC_DATA = {
+    "Baseline": {"gdp-growth": 0.02, "unemployment-rate": 5, "interest-rate": 0.03, "housing-price-index": 200},
+    "Adverse": {"gdp-growth": -0.01, "unemployment-rate": 8, "interest-rate": 0.05, "housing-price-index": 180},
+    "Severely Adverse": {"gdp-growth": -0.04, "unemployment-rate": 12, "interest-rate": 0.07, "housing-price-index": 160},
+}
 
-    return html.Span([
+class CECLEngine:
+    def __init__(self):
+        self.economic_factors = pd.DataFrame(DEFAULT_ECONOMIC_DATA).T
+        self.asset_pools = DEFAULT_POOL_DATA.copy()
+        self.scenario_weights = {"Baseline": 0.4, "Adverse": 0.3, "Severely Adverse": 0.3}
+        self.economic_sensitivities = {pool_id: {"gdp-growth": 0.7, "unemployment-rate": 0.5, "interest-rate": 0.8, "housing-price-index": 0.9} for pool_id in ALL_POOLS}
 
-        " ",
+    def calculate_expected_loss(self, pool_id, scenario):
+        pool_data = self.asset_pools[pool_id]
+        economic_data = self.economic_factors.loc[scenario]
+        economic_impact = sum(self.economic_sensitivities[pool_id][factor] * economic_data[factor] for factor in economic_data.index)
+        pd_adjusted = min(1, max(0, pool_data['default-prob'] * (1 + economic_impact * 0.1)))
+        lgd_adjusted = min(1, max(0, pool_data['lgd'] * (1 + economic_impact * 0.05)))
+        ead = pool_data['balance'] * (1 + pool_data['undrawn-percentage'])
+        return pd_adjusted * lgd_adjusted * ead
 
-        html.I(className="fas fa-info-circle", id=f"tooltip-{tooltip_text.replace(' ', '-')}"),
+    def calculate_lifetime_ecl(self, pool_id):
+        lifetime = self.asset_pools[pool_id]['average-life']
+        return sum(
+            self.scenario_weights[scenario] * sum(
+                self.calculate_expected_loss(pool_id, scenario) / (1 + self.asset_pools[pool_id]['discount-rate'])**(year+1)
+                for year in range(int(lifetime))
+            ) for scenario in ECONOMIC_SCENARIOS
+        )
 
-        dbc.Tooltip(tooltip_text, target=f"tooltip-{tooltip_text.replace(' ', '-')}")
+calc_engine = CECLEngine()
 
-    ])
+def create_input_group(pool_id, pool_name):
+    return dbc.Row([
+        dbc.Col(html.Div(pool_name), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="text", value=f"{DEFAULT_POOL_DATA[pool_id]['balance']:,}"), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob']), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd']), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-average-life"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['average-life']), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate']), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage']), width=2),
+    ], className="mb-2")
 
- 
+def create_economic_inputs(scenario):
+    return dbc.Row([
+        dbc.Col(html.Div(scenario), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth']), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate']), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-interest-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['interest-rate']), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index']), width=2),
+    ], className="mb-2")
 
 app.layout = dbc.Container([
-
-    html.H1("CECL Model Dashboard", className="my-4 text-center"),
-
-   
-
-    dbc.Row([
-
-        dbc.Col([
-
-            dbc.Card([
-
-                dbc.CardHeader(html.H4("Model Parameters", className="mb-0")),
-
-                dbc.CardBody([
-
-                    html.Div([
-
-                        dbc.Label("Model Type"),
-
-                        dcc.Dropdown(
-
-                            id="model-type",
-
-                            options=[
-
-                                {"label": "Linear Regression", "value": "Linear Regression"},
-
-                                {"label": "Logistic Regression", "value": "Logistic Regression"}
-
-                            ],
-
-                            value="Linear Regression",
-
-                        ),
-
-                        info_icon("Choose between Linear Regression and Logistic Regression for CECL calculations. Each model uses different approaches to estimate expected credit losses.")
-
-                    ], className="mb-3"),
-
-                ])
-
-            ], className="mb-3"),
-
-           
-
-            dbc.Card([
-
-                dbc.CardHeader(html.H4("Economic Factors", className="mb-0")),
-
-                dbc.CardBody([
-
-                    html.Div([
-
-                        dbc.Label(f"{factor} (%)"),
-
-                        dbc.Input(id=f"ef-{factor.lower().replace(' ', '-')}", type="number", value=DEFAULT_ECONOMIC_FACTORS[factor], step=0.1),
-
-                        info_icon(f"Current or forecasted {factor}. This affects the CECL calculations based on the economic factor weights.")
-
-                    ], className="mb-3") for factor in ECONOMIC_FACTORS
-
-                ])
-
-            ], className="mb-3"),
-
-           
-
-            dbc.Button("Calculate Reserves", id="calculate-btn", color="primary", className="w-100")
-
-        ], md=4),
-
-       
-
-        dbc.Col([
-
-            dbc.Tabs([
-
-                dbc.Tab(label="Asset Pools", children=[
-
-                    html.Div([
-
-                        html.H5(category, className="mt-3"),
-
-                        dbc.Table([
-
-                            html.Thead(html.Tr([html.Th("Subcategory"), html.Th("Balance ($)"), html.Th("Avg Life (years)"), html.Th("Historical Loss Rate (%)"), html.Th("Prepayment Rate (%)"), html.Th("CECL Reserve ($)")])),
-
-                            html.Tbody([
-
-                                html.Tr([
-
-                                    html.Td(subcategory),
-
-                                    html.Td(dbc.Input(id=f"balance-{category.lower().replace(' ', '-')}-{subcategory.lower().replace(' ', '-')}", type="number", value=1000000, step=1000)),
-
-                                    html.Td(dbc.Input(id=f"avg-life-{category.lower().replace(' ', '-')}-{subcategory.lower().replace(' ', '-')}", type="number", value=5, step=0.1)),
-
-                                    html.Td(dbc.Input(id=f"hist-loss-rate-{category.lower().replace(' ', '-')}-{subcategory.lower().replace(' ', '-')}", type="number", value=1, step=0.01)),
-
-                                    html.Td(dbc.Input(id=f"prepayment-rate-{category.lower().replace(' ', '-')}-{subcategory.lower().replace(' ', '-')}", type="number", value=2, step=0.1)),
-
-                                    html.Td(html.Div(id=f"cecl-reserve-{category.lower().replace(' ', '-')}-{subcategory.lower().replace(' ', '-')}"))
-
-                                ]) for subcategory in subcategories
-
-                            ])
-
-                        ], bordered=True, hover=True, responsive=True, striped=True)
-
-                    ]) for category, subcategories in ASSET_POOLS.items()
-
-                ]),
-
-                dbc.Tab(label="Economic Factor Weights", children=[
-
-                    html.P("The heatmaps below show the impact of each economic factor on different asset categories. Blue indicates a negative relationship (factor increase leads to reserve decrease), while red indicates a positive relationship."),
-
-                    *[html.Div([
-
-                        html.H6(f"Economic Factor Weights for {category}", className="mt-3"),
-
-                        dcc.Graph(id=f"weight-heatmap-{category.lower().replace(' ', '-')}")
-
-                    ]) for category in ASSET_POOLS.keys()]
-
-                ]),
-
-                dbc.Tab(label="Results", children=[
-
-                    html.Div(id="summary-stats", className="mt-4"),
-
-                    dcc.Graph(id="reserve-chart"),
-
-                ]),
-
-            ])
-
-        ], md=8)
-
+    html.H1("CECL Model Dashboard", className="text-center my-4"),
+    html.Div([
+        html.H4("Loan Pools"),
+        dbc.Row([
+            dbc.Col(html.Div("Pool Name"), width=2),
+            dbc.Col(html.Div("Balance"), width=2),
+            dbc.Col(html.Div("PD"), width=1),
+            dbc.Col(html.Div("LGD"), width=1),
+            dbc.Col(html.Div("Avg Life"), width=2),
+            dbc.Col(html.Div("Discount Rate"), width=2),
+            dbc.Col(html.Div("Undrawn %"), width=2),
+        ], className="mb-2 font-weight-bold"),
+        html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
+        html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
+        html.H4("Economic Scenarios", className="mt-4"),
+        dbc.Row([
+            dbc.Col(html.Div("Scenario"), width=2),
+            dbc.Col(html.Div("GDP Growth"), width=2),
+            dbc.Col(html.Div("Unemployment"), width=2),
+            dbc.Col(html.Div("Interest Rate"), width=2),
+            dbc.Col(html.Div("HPI"), width=2),
+        ], className="mb-2 font-weight-bold"),
+        html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
     ]),
-
-], fluid=True)
-
- 
+    dbc.Button("Calculate", id="calculate-button", color="primary", className="mt-3"),
+    html.Div(id="results-content", className="mt-4"),
+])
 
 @app.callback(
-
-    [Output(f"cecl-reserve-{category.lower().replace(' ', '-')}-{subcategory.lower().replace(' ', '-')}", "children")
-
-     for category, subcategories in ASSET_POOLS.items() for subcategory in subcategories] +
-
-    [Output("summary-stats", "children"), Output("reserve-chart", "figure")] +
-
-    [Output(f"weight-heatmap-{category.lower().replace(' ', '-')}", "figure") for category in ASSET_POOLS.keys()],
-
-    Input("calculate-btn", "n_clicks"),
-
-    [State("model-type", "value")] +
-
-    [State(f"ef-{factor.lower().replace(' ', '-')}", "value") for factor in ECONOMIC_FACTORS] +
-
-    [State(f"balance-{category.lower().replace(' ', '-')}-{subcategory.lower().replace(' ', '-')}", "value")
-
-     for category, subcategories in ASSET_POOLS.items() for subcategory in subcategories] +
-
-    [State(f"avg-life-{category.lower().replace(' ', '-')}-{subcategory.lower().replace(' ', '-')}", "value")
-
-     for category, subcategories in ASSET_POOLS.items() for subcategory in subcategories] +
-
-    [State(f"hist-loss-rate-{category.lower().replace(' ', '-')}-{subcategory.lower().replace(' ', '-')}", "value")
-
-     for category, subcategories in ASSET_POOLS.items() for subcategory in subcategories] +
-
-    [State(f"prepayment-rate-{category.lower().replace(' ', '-')}-{subcategory.lower().replace(' ', '-')}", "value")
-
-     for category, subcategories in ASSET_POOLS.items() for subcategory in subcategories]
-
+    Output("results-content", "children"),
+    Input("calculate-button", "n_clicks"),
+    State({"type": "pool-input", "id": ALL}, "value"),
+    State({"type": "economic-input", "id": ALL}, "value"),
 )
-
-def update_reserves(n_clicks, model_type, *args):
-
+def update_results(n_clicks, pool_inputs, economic_inputs):
     if n_clicks is None:
+        raise dash.exceptions.PreventUpdate
 
-        return [""] * sum(len(subcategories) for subcategories in ASSET_POOLS.values()) + [None, {}] + [go.Figure() for _ in ASSET_POOLS]
+    # Update asset pools
+    for i, pool_id in enumerate(ALL_POOLS):
+        try:
+            calc_engine.asset_pools[pool_id] = {
+                'balance': float(pool_inputs[i*6].replace(',', '')),
+                'default-prob': float(pool_inputs[i*6 + 1]),
+                'lgd': float(pool_inputs[i*6 + 2]),
+                'average-life': float(pool_inputs[i*6 + 3]),
+                'discount-rate': float(pool_inputs[i*6 + 4]),
+                'undrawn-percentage': float(pool_inputs[i*6 + 5]),
+            }
+        except (IndexError, ValueError):
+            pass
 
-   
+    # Update economic factors
+    if economic_inputs:
+        for i, scenario in enumerate(ECONOMIC_SCENARIOS):
+            try:
+                calc_engine.economic_factors.loc[scenario] = {
+                    'gdp-growth': float(economic_inputs[i*4]),
+                    'unemployment-rate': float(economic_inputs[i*4 + 1]),
+                    'interest-rate': float(economic_inputs[i*4 + 2]),
+                    'housing-price-index': float(economic_inputs[i*4 + 3])
+                }
+            except (IndexError, ValueError):
+                pass
 
-    economic_factors = args[:3]
+    # Calculate ECL for each pool
+    ecl_data = [(ALL_POOLS[pool_id], calc_engine.calculate_lifetime_ecl(pool_id)) for pool_id in ALL_POOLS]
+    ecl_data.sort(key=lambda x: x[1], reverse=True)
+    total_reserve = sum(ecl for _, ecl in ecl_data)
 
-    num_subcategories = sum(len(subcategories) for subcategories in ASSET_POOLS.values())
-
-    balances = args[3:3+num_subcategories]
-
-    avg_lives = args[3+num_subcategories:3+2*num_subcategories]
-
-    hist_loss_rates = args[3+2*num_subcategories:3+3*num_subcategories]
-
-    prepayment_rates = args[3+3*num_subcategories:3+4*num_subcategories]
-
- 
-
-    reserves = []
-
-    total_balance = 0
-
-    total_reserve = 0
-
-   
-
-    subcategory_index = 0
-
-    for category, subcategories in ASSET_POOLS.items():
-
-        for subcategory in subcategories:
-
-            balance = balances[subcategory_index]
-
-            avg_life = avg_lives[subcategory_index]
-
-            hist_loss_rate = hist_loss_rates[subcategory_index]
-
-            prepayment_rate = prepayment_rates[subcategory_index]
-
-           
-
-            if all(v is not None for v in [balance, avg_life, hist_loss_rate, prepayment_rate]):
-
-                weights = INITIAL_WEIGHTS[category][subcategory]
-
-                cecl_reserve = calculate_cecl_reserve(balance, avg_life, hist_loss_rate, prepayment_rate, economic_factors, weights, model_type)
-
-                reserves.append(f"${int(cecl_reserve):,}")
-
-                total_balance += balance
-
-                total_reserve += cecl_reserve
-
-            else:
-
-                reserves.append("")
-
-           
-
-            subcategory_index += 1
-
- 
-
-    overall_reserve_rate = (total_reserve / total_balance) * 100 if total_balance > 0 else 0
-
-   
-
-    summary_stats = [
-
-        html.H5("Summary Statistics"),
-
-        html.P(f"Total Balance: ${int(total_balance):,}"),
-
-        html.P(f"Total CECL Reserve: ${int(total_reserve):,}"),
-
-        html.P(f"Overall Reserve Rate: {overall_reserve_rate:.2f}%"),
-
-    ]
-
-   
-
-    fig = go.Figure(data=[go.Bar(
-
-        x=[f"{category} - {subcategory}" for category, subcategories in ASSET_POOLS.items() for subcategory in subcategories],
-
-        y=[int(float(reserve.replace('$', '').replace(',', ''))) if reserve else 0 for reserve in reserves],
-
-        text=[f"${int(float(reserve.replace('$', '').replace(',', ''))):,}" if reserve else "$0" for reserve in reserves],
-
-        textposition='auto',
-
-    )])
-
-    fig.update_layout(
-
-        title="CECL Reserve by Asset Pool",
-
-        xaxis_title="Asset Pool",
-
-        yaxis_title="Reserve Amount ($)",
-
-        xaxis={'categoryorder':'total descending'}
-
+    # Generate charts and summary
+    ecl_by_pool_chart = dcc.Graph(
+        figure={
+            'data': [go.Bar(x=[name for name, _ in ecl_data], y=[ecl for _, ecl in ecl_data])],
+            'layout': go.Layout(title="Lifetime ECL by Pool", xaxis={'title': 'Pool'}, yaxis={'title': 'ECL ($)'})
+        }
     )
 
-   
+    scenario_data = {scenario: [] for scenario in ECONOMIC_SCENARIOS}
+    for pool_id in ALL_POOLS:
+        for scenario in ECONOMIC_SCENARIOS:
+            scenario_data[scenario].append(calc_engine.calculate_expected_loss(pool_id, scenario))
 
-    # Create heatmaps for each category
+    ecl_by_scenario_chart = dcc.Graph(
+        figure={
+            'data': [go.Bar(name=scenario, x=list(ALL_POOLS.values()), y=ecls) for scenario, ecls in scenario_data.items()],
+            'layout': go.Layout(title="ECL by Scenario and Pool", xaxis={'title': 'Pool'}, yaxis={'title': 'ECL ($)'}, barmode='group')
+        }
+    )
 
-    category_heatmaps = [create_weight_heatmap(INITIAL_WEIGHTS[category], f"Economic Factor Weights for {category}") for category in ASSET_POOLS.keys()]
+    ecl_summary = html.Div([
+        html.H4("ECL Summary"),
+        html.Ul([html.Li(f"{name}: ${ecl:,.2f}") for name, ecl in ecl_data]),
+        html.H4(f"Total Reserve: ${total_reserve:,.2f}", className="mt-3")
+    ])
 
-   
+    return html.Div([ecl_by_pool_chart, ecl_by_scenario_chart, ecl_summary])
 
-    return reserves + [summary_stats, fig] + category_heatmaps
+@app.callback(
+    Output({"type": "pool-input", "id": ALL}, "value"),
+    Input({"type": "pool-input", "id": ALL}, "value"),
+    State({"type": "pool-input", "id": ALL}, "id"),
+)
+def format_number(values, ids):
+    return [f"{float(value.replace(',', '')):,.0f}" if "-balance" in id_dict["id"] else value for value, id_dict in zip(values, ids)]
 
- 
-
-if __name__ == "__main__":
-
+if __name__ == '__main__':
     app.run_server(debug=True)

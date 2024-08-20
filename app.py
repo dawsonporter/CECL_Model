@@ -10,24 +10,40 @@ server = app.server
 
 # Define loan pools and economic scenarios
 COMMERCIAL_POOLS = {
-    "C1": "CRE - Office", "C2": "CRE - Retail", "C3": "CRE - Industrial",
-    "C4": "C&I - Large", "C5": "C&I - Middle", "C6": "Small Business", "C7": "Agricultural"
+    "C1": "CRE - Office",
+    "C2": "CRE - Retail",
+    "C3": "CRE - Industrial",
+    "C4": "CRE - Multi-Family",
+    "C5": "C&I - Large",
+    "C6": "C&I - Middle",
+    "C7": "Small Business",
+    "C8": "Agricultural"
 }
 CONSUMER_POOLS = {
-    "P1": "Res. Mortgages - Fixed", "P2": "Res. Mortgages - Adj.", "P3": "HELOCs",
-    "P4": "Auto - New", "P5": "Auto - Used", "P6": "Credit Cards",
-    "P7": "Personal - Secured", "P8": "Personal - Unsecured", "P9": "Student Loans"
+    "P1": "Residential Mortgages",
+    "P2": "Auto Loans",
+    "P3": "Credit Cards",
+    "P4": "Personal Loans"
 }
 ALL_POOLS = {**COMMERCIAL_POOLS, **CONSUMER_POOLS}
 ECONOMIC_SCENARIOS = ["Baseline", "Adverse", "Severely Adverse"]
 
-# Default data
+# Default data with more realistic loan balances (in millions)
 DEFAULT_POOL_DATA = {
-    pool_id: {
-        "balance": 100_000_000, "default-prob": 2, "lgd": 35,
-        "average-life": 5, "discount-rate": 5, "undrawn-percentage": 10
-    } for pool_id in ALL_POOLS
+    "C1": {"balance": 2000, "default-prob": 2, "lgd": 35, "average-life": 7, "discount-rate": 5, "undrawn-percentage": 10},
+    "C2": {"balance": 1800, "default-prob": 2.5, "lgd": 40, "average-life": 6, "discount-rate": 5, "undrawn-percentage": 15},
+    "C3": {"balance": 1500, "default-prob": 1.5, "lgd": 30, "average-life": 8, "discount-rate": 5, "undrawn-percentage": 5},
+    "C4": {"balance": 2500, "default-prob": 1.8, "lgd": 25, "average-life": 10, "discount-rate": 5, "undrawn-percentage": 5},
+    "C5": {"balance": 3000, "default-prob": 1, "lgd": 45, "average-life": 5, "discount-rate": 5, "undrawn-percentage": 20},
+    "C6": {"balance": 2000, "default-prob": 3, "lgd": 50, "average-life": 4, "discount-rate": 5, "undrawn-percentage": 25},
+    "C7": {"balance": 1000, "default-prob": 4, "lgd": 55, "average-life": 3, "discount-rate": 5, "undrawn-percentage": 30},
+    "C8": {"balance": 500, "default-prob": 3.5, "lgd": 45, "average-life": 5, "discount-rate": 5, "undrawn-percentage": 10},
+    "P1": {"balance": 5000, "default-prob": 0.5, "lgd": 20, "average-life": 15, "discount-rate": 4, "undrawn-percentage": 0},
+    "P2": {"balance": 1500, "default-prob": 2, "lgd": 40, "average-life": 5, "discount-rate": 6, "undrawn-percentage": 0},
+    "P3": {"balance": 800, "default-prob": 5, "lgd": 70, "average-life": 2, "discount-rate": 10, "undrawn-percentage": 60},
+    "P4": {"balance": 500, "default-prob": 4, "lgd": 60, "average-life": 3, "discount-rate": 8, "undrawn-percentage": 0},
 }
+
 DEFAULT_ECONOMIC_DATA = {
     "Baseline": {"gdp-growth": 2, "unemployment-rate": 5, "interest-rate": 3, "housing-price-index": 200},
     "Adverse": {"gdp-growth": -1, "unemployment-rate": 8, "interest-rate": 5, "housing-price-index": 180},
@@ -100,7 +116,7 @@ app.layout = dbc.Container([
         dbc.CardBody([
             dbc.Row([
                 dbc.Col(html.Div("Pool Name", className="fw-bold"), width=2),
-                dbc.Col(html.Div("Balance ($)", className="fw-bold"), width=2),
+                dbc.Col(html.Div("Balance ($M)", className="fw-bold"), width=2),
                 dbc.Col(html.Div("PD (%)", className="fw-bold"), width=1),
                 dbc.Col(html.Div("LGD (%)", className="fw-bold"), width=1),
                 dbc.Col(html.Div("Avg Life (Years)", className="fw-bold"), width=2),
@@ -166,15 +182,15 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
                 pass
 
     # Calculate ECL for each pool
-    ecl_data = [(ALL_POOLS[pool_id], calc_engine.calculate_lifetime_ecl(pool_id)) for pool_id in ALL_POOLS]
-    ecl_data.sort(key=lambda x: x[1], reverse=True)
-    total_reserve = sum(ecl for _, ecl in ecl_data)
+    ecl_data = [(pool_id, ALL_POOLS[pool_id], calc_engine.calculate_lifetime_ecl(pool_id)) for pool_id in ALL_POOLS]
+    ecl_data.sort(key=lambda x: x[2], reverse=True)
+    total_reserve = sum(ecl for _, _, ecl in ecl_data)
 
     # Generate charts and summary
     ecl_by_pool_chart = dcc.Graph(
         figure={
-            'data': [go.Bar(x=[name for name, _ in ecl_data], y=[ecl for _, ecl in ecl_data])],
-            'layout': go.Layout(title="Lifetime ECL by Pool", xaxis={'title': 'Pool'}, yaxis={'title': 'ECL ($)'})
+            'data': [go.Bar(x=[name for _, name, _ in ecl_data], y=[ecl for _, _, ecl in ecl_data])],
+            'layout': go.Layout(title="Lifetime ECL by Pool", xaxis={'title': 'Pool'}, yaxis={'title': 'ECL ($M)'})
         }
     )
 
@@ -186,15 +202,71 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
     ecl_by_scenario_chart = dcc.Graph(
         figure={
             'data': [go.Bar(name=scenario, x=list(ALL_POOLS.values()), y=ecls) for scenario, ecls in scenario_data.items()],
-            'layout': go.Layout(title="ECL by Scenario and Pool", xaxis={'title': 'Pool'}, yaxis={'title': 'ECL ($)'}, barmode='group')
+            'layout': go.Layout(title="ECL by Scenario and Pool", xaxis={'title': 'Pool'}, yaxis={'title': 'ECL ($M)'}, barmode='group')
         }
     )
+
+    # Create a more detailed summary
+    commercial_ecl = sum(ecl for pool_id, _, ecl in ecl_data if pool_id.startswith('C'))
+    consumer_ecl = sum(ecl for pool_id, _, ecl in ecl_data if pool_id.startswith('P'))
+    total_balance = sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in ALL_POOLS)
+    
+    summary_table = dbc.Table([
+        html.Thead([
+            html.Tr([
+                html.Th("Category"),
+                html.Th("Total Balance ($M)"),
+                html.Th("ECL ($M)"),
+                html.Th("ECL Coverage (%)")
+            ])
+        ]),
+        html.Tbody([
+            html.Tr([
+                html.Td("Commercial"),
+                html.Td(f"{sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in COMMERCIAL_POOLS):,.2f}"),
+                html.Td(f"{commercial_ecl:,.2f}"),
+                html.Td(f"{commercial_ecl / sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in COMMERCIAL_POOLS) * 100:.2f}%")
+            ]),
+            html.Tr([
+                html.Td("Consumer"),
+                html.Td(f"{sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in CONSUMER_POOLS):,.2f}"),
+                html.Td(f"{consumer_ecl:,.2f}"),
+                html.Td(f"{consumer_ecl / sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in CONSUMER_POOLS) * 100:.2f}%")
+            ]),
+            html.Tr([
+                html.Td("Total", className="fw-bold"),
+                html.Td(f"{total_balance:,.2f}", className="fw-bold"),
+                html.Td(f"{total_reserve:,.2f}", className="fw-bold"),
+                html.Td(f"{total_reserve / total_balance * 100:.2f}%", className="fw-bold")
+            ])
+        ])
+    ], bordered=True, hover=True, striped=True, className="mt-4")
+
+    # Top 5 pools by ECL
+    top_5_ecl = ecl_data[:5]
+    top_5_table = dbc.Table([
+        html.Thead([
+            html.Tr([
+                html.Th("Pool"),
+                html.Th("ECL ($M)"),
+                html.Th("% of Total ECL")
+            ])
+        ]),
+        html.Tbody([
+            html.Tr([
+                html.Td(name),
+                html.Td(f"{ecl:,.2f}"),
+                html.Td(f"{ecl / total_reserve * 100:.2f}%")
+            ]) for _, name, ecl in top_5_ecl
+        ])
+    ], bordered=True, hover=True, striped=True, className="mt-4")
 
     ecl_summary = dbc.Card([
         dbc.CardHeader(html.H4("ECL Summary", className="mb-0")),
         dbc.CardBody([
-            html.Ul([html.Li(f"{name}: ${ecl:,.2f}") for name, ecl in ecl_data], className="list-unstyled"),
-            html.H4(f"Total Reserve: ${total_reserve:,.2f}", className="mt-3 text-primary")
+            summary_table,
+            html.H5("Top 5 Pools by ECL", className="mt-4"),
+            top_5_table
         ])
     ])
 

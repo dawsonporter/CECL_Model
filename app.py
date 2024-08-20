@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objs as go
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME], suppress_callback_exceptions=True)
 server = app.server
 
 # Define loan pools and economic scenarios
@@ -24,14 +24,20 @@ ECONOMIC_SCENARIOS = ["Baseline", "Adverse", "Severely Adverse"]
 # Default data
 DEFAULT_POOL_DATA = {
     pool_id: {
-        "balance": 100_000_000, "default-prob": 0.02, "lgd": 0.35,
-        "average-life": 5, "discount-rate": 0.05, "undrawn-percentage": 0.1
+        "balance": 100_000_000, "default-prob": 2, "lgd": 35,
+        "average-life": 5, "discount-rate": 5, "undrawn-percentage": 10
     } for pool_id in ALL_POOLS
 }
 DEFAULT_ECONOMIC_DATA = {
-    "Baseline": {"gdp-growth": 0.02, "unemployment-rate": 5, "interest-rate": 0.03, "housing-price-index": 200},
-    "Adverse": {"gdp-growth": -0.01, "unemployment-rate": 8, "interest-rate": 0.05, "housing-price-index": 180},
-    "Severely Adverse": {"gdp-growth": -0.04, "unemployment-rate": 12, "interest-rate": 0.07, "housing-price-index": 160},
+    "Baseline": {"gdp-growth": 2, "unemployment-rate": 5, "interest-rate": 3, "housing-price-index": 200},
+    "Adverse": {"gdp-growth": -1, "unemployment-rate": 8, "interest-rate": 5, "housing-price-index": 180},
+    "Severely Adverse": {"gdp-growth": -4, "unemployment-rate": 12, "interest-rate": 7, "housing-price-index": 160},
+}
+
+# Economic sensitivities (impact multipliers)
+ECONOMIC_SENSITIVITIES = {
+    "Commercial": {"gdp-growth": 1.2, "unemployment-rate": 0.8, "interest-rate": 1.5, "housing-price-index": 0.5},
+    "Consumer": {"gdp-growth": 0.8, "unemployment-rate": 1.2, "interest-rate": 1.0, "housing-price-index": 1.5}
 }
 
 class CECLEngine:
@@ -39,22 +45,28 @@ class CECLEngine:
         self.economic_factors = pd.DataFrame(DEFAULT_ECONOMIC_DATA).T
         self.asset_pools = DEFAULT_POOL_DATA.copy()
         self.scenario_weights = {"Baseline": 0.4, "Adverse": 0.3, "Severely Adverse": 0.3}
-        self.economic_sensitivities = {pool_id: {"gdp-growth": 0.7, "unemployment-rate": 0.5, "interest-rate": 0.8, "housing-price-index": 0.9} for pool_id in ALL_POOLS}
 
     def calculate_expected_loss(self, pool_id, scenario):
         pool_data = self.asset_pools[pool_id]
         economic_data = self.economic_factors.loc[scenario]
-        economic_impact = sum(self.economic_sensitivities[pool_id][factor] * economic_data[factor] for factor in economic_data.index)
-        pd_adjusted = min(1, max(0, pool_data['default-prob'] * (1 + economic_impact * 0.1)))
-        lgd_adjusted = min(1, max(0, pool_data['lgd'] * (1 + economic_impact * 0.05)))
-        ead = pool_data['balance'] * (1 + pool_data['undrawn-percentage'])
-        return pd_adjusted * lgd_adjusted * ead
+        pool_type = "Commercial" if pool_id.startswith("C") else "Consumer"
+        
+        economic_impact = sum(
+            ECONOMIC_SENSITIVITIES[pool_type][factor] * economic_data[factor] / 100
+            for factor in economic_data.index
+        )
+        
+        pd_adjusted = min(100, max(0, pool_data['default-prob'] * (1 + economic_impact)))
+        lgd_adjusted = min(100, max(0, pool_data['lgd'] * (1 + economic_impact * 0.5)))
+        ead = pool_data['balance'] * (1 + pool_data['undrawn-percentage'] / 100)
+        
+        return (pd_adjusted / 100) * (lgd_adjusted / 100) * ead
 
     def calculate_lifetime_ecl(self, pool_id):
         lifetime = self.asset_pools[pool_id]['average-life']
         return sum(
             self.scenario_weights[scenario] * sum(
-                self.calculate_expected_loss(pool_id, scenario) / (1 + self.asset_pools[pool_id]['discount-rate'])**(year+1)
+                self.calculate_expected_loss(pool_id, scenario) / (1 + self.asset_pools[pool_id]['discount-rate'] / 100)**(year+1)
                 for year in range(int(lifetime))
             ) for scenario in ECONOMIC_SCENARIOS
         )
@@ -63,51 +75,57 @@ calc_engine = CECLEngine()
 
 def create_input_group(pool_id, pool_name):
     return dbc.Row([
-        dbc.Col(html.Div(pool_name), width=2),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="text", value=f"{DEFAULT_POOL_DATA[pool_id]['balance']:,}"), width=2),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob']), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd']), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-average-life"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['average-life']), width=2),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate']), width=2),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage']), width=2),
-    ], className="mb-2")
+        dbc.Col(html.Div(pool_name, className="fw-bold"), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="text", value=f"{DEFAULT_POOL_DATA[pool_id]['balance']:,}", className="form-control-sm"), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob'], className="form-control-sm"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd'], className="form-control-sm"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-average-life"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['average-life'], className="form-control-sm"), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], className="form-control-sm"), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control-sm"), width=2),
+    ], className="mb-2 align-items-center")
 
 def create_economic_inputs(scenario):
     return dbc.Row([
-        dbc.Col(html.Div(scenario), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth']), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate']), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-interest-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['interest-rate']), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index']), width=2),
-    ], className="mb-2")
+        dbc.Col(html.Div(scenario, className="fw-bold"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], className="form-control-sm"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], className="form-control-sm"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-interest-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['interest-rate'], className="form-control-sm"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control-sm"), width=2),
+    ], className="mb-2 align-items-center")
 
 app.layout = dbc.Container([
     html.H1("CECL Model Dashboard", className="text-center my-4"),
-    html.Div([
-        html.H4("Loan Pools"),
-        dbc.Row([
-            dbc.Col(html.Div("Pool Name"), width=2),
-            dbc.Col(html.Div("Balance"), width=2),
-            dbc.Col(html.Div("PD"), width=1),
-            dbc.Col(html.Div("LGD"), width=1),
-            dbc.Col(html.Div("Avg Life"), width=2),
-            dbc.Col(html.Div("Discount Rate"), width=2),
-            dbc.Col(html.Div("Undrawn %"), width=2),
-        ], className="mb-2 font-weight-bold"),
-        html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
-        html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
-        html.H4("Economic Scenarios", className="mt-4"),
-        dbc.Row([
-            dbc.Col(html.Div("Scenario"), width=2),
-            dbc.Col(html.Div("GDP Growth"), width=2),
-            dbc.Col(html.Div("Unemployment"), width=2),
-            dbc.Col(html.Div("Interest Rate"), width=2),
-            dbc.Col(html.Div("HPI"), width=2),
-        ], className="mb-2 font-weight-bold"),
-        html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
-    ]),
-    dbc.Button("Calculate", id="calculate-button", color="primary", className="mt-3"),
-    html.Div(id="results-content", className="mt-4"),
+    dbc.Card([
+        dbc.CardHeader(html.H4("Loan Pools", className="mb-0")),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col(html.Div("Pool Name", className="fw-bold"), width=2),
+                dbc.Col(html.Div("Balance ($)", className="fw-bold"), width=2),
+                dbc.Col(html.Div("PD (%)", className="fw-bold"), width=1),
+                dbc.Col(html.Div("LGD (%)", className="fw-bold"), width=1),
+                dbc.Col(html.Div("Avg Life (Years)", className="fw-bold"), width=2),
+                dbc.Col(html.Div("Discount Rate (%)", className="fw-bold"), width=2),
+                dbc.Col(html.Div("Undrawn (%)", className="fw-bold"), width=2),
+            ], className="mb-2"),
+            html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
+            html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
+        ]),
+    ], className="mb-4"),
+    dbc.Card([
+        dbc.CardHeader(html.H4("Economic Scenarios", className="mb-0")),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col(html.Div("Scenario", className="fw-bold"), width=2),
+                dbc.Col(html.Div("GDP Growth (%)", className="fw-bold"), width=2),
+                dbc.Col(html.Div("Unemployment (%)", className="fw-bold"), width=2),
+                dbc.Col(html.Div("Interest Rate (%)", className="fw-bold"), width=2),
+                dbc.Col(html.Div("HPI", className="fw-bold"), width=2),
+            ], className="mb-2"),
+            html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
+        ]),
+    ], className="mb-4"),
+    dbc.Button("Calculate", id="calculate-button", color="primary", className="mb-4"),
+    html.Div(id="results-content"),
 ])
 
 @app.callback(
@@ -172,13 +190,19 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
         }
     )
 
-    ecl_summary = html.Div([
-        html.H4("ECL Summary"),
-        html.Ul([html.Li(f"{name}: ${ecl:,.2f}") for name, ecl in ecl_data]),
-        html.H4(f"Total Reserve: ${total_reserve:,.2f}", className="mt-3")
+    ecl_summary = dbc.Card([
+        dbc.CardHeader(html.H4("ECL Summary", className="mb-0")),
+        dbc.CardBody([
+            html.Ul([html.Li(f"{name}: ${ecl:,.2f}") for name, ecl in ecl_data], className="list-unstyled"),
+            html.H4(f"Total Reserve: ${total_reserve:,.2f}", className="mt-3 text-primary")
+        ])
     ])
 
-    return html.Div([ecl_by_pool_chart, ecl_by_scenario_chart, ecl_summary])
+    return dbc.Row([
+        dbc.Col(ecl_by_pool_chart, md=6),
+        dbc.Col(ecl_by_scenario_chart, md=6),
+        dbc.Col(ecl_summary, md=12, className="mt-4")
+    ])
 
 @app.callback(
     Output({"type": "pool-input", "id": ALL}, "value"),

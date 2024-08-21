@@ -105,22 +105,22 @@ calc_engine = CECLEngine()
 def create_input_group(pool_id, pool_name):
     return dbc.Row([
         dbc.Col(html.Div(pool_name, className="fw-bold"), width=2),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="text", value=f"{DEFAULT_POOL_DATA[pool_id]['balance']:,}", className="form-control"), width=2),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob'], step=0.1, className="form-control"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd'], step=0.1, className="form-control"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-original-term"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['original-term'], className="form-control"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], step=0.1, className="form-control"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="text", value=f"{DEFAULT_POOL_DATA[pool_id]['balance']:,}", className="form-control text-center"), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob'], step=0.1, className="form-control text-center"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd'], step=0.1, className="form-control text-center"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-original-term"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['original-term'], className="form-control text-center"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], step=0.1, className="form-control text-center"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control text-center"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control text-center"), width=1),
     ], className="mb-2 align-items-center")
 
 def create_economic_inputs(scenario):
     return dbc.Row([
         dbc.Col(html.Div(scenario, className="fw-bold"), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], step=0.1, className="form-control"), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control"), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control"), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], step=0.1, className="form-control text-center"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control text-center"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control text-center"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control text-center"), width=2),
     ], className="mb-2 align-items-center")
 
 def create_model_explanation():
@@ -179,24 +179,6 @@ def create_model_explanation():
                 ])
             ], bordered=True, hover=True, striped=True, className="mt-3")
         ]),
-        html.H3("Typical Input Ranges", className="mb-3"),
-        html.P("The following table provides typical ranges for input parameters across different loan pools:"),
-        html.Div([
-            dbc.Table([
-                html.Thead([
-                    html.Tr([html.Th("Pool Type"), html.Th("PD Range (%)"), html.Th("LGD Range (%)"), html.Th("Original Term (Years)"), html.Th("Discount Rate (%)"), html.Th("Undrawn (%)"), html.Th("Prepayment Rate (%)")])
-                ]),
-                html.Tbody([
-                    html.Tr([html.Td("CRE"), html.Td("1.0 - 3.0"), html.Td("20 - 45"), html.Td("5 - 15"), html.Td("4 - 6"), html.Td("5 - 20"), html.Td("2 - 8")]),
-                    html.Tr([html.Td("C&I"), html.Td("0.5 - 4.0"), html.Td("30 - 60"), html.Td("3 - 7"), html.Td("4 - 7"), html.Td("20 - 40"), html.Td("5 - 15")]),
-                    html.Tr([html.Td("Small Business"), html.Td("2.0 - 6.0"), html.Td("40 - 70"), html.Td("2 - 5"), html.Td("5 - 8"), html.Td("10 - 30"), html.Td("8 - 20")]),
-                    html.Tr([html.Td("Residential Mortgages"), html.Td("0.2 - 1.0"), html.Td("10 - 30"), html.Td("15 - 30"), html.Td("3 - 5"), html.Td("0 - 5"), html.Td("5 - 25")]),
-                    html.Tr([html.Td("Auto Loans"), html.Td("1.0 - 3.0"), html.Td("30 - 60"), html.Td("3 - 7"), html.Td("4 - 8"), html.Td("0 - 5"), html.Td("10 - 30")]),
-                    html.Tr([html.Td("Credit Cards"), html.Td("3.0 - 8.0"), html.Td("60 - 80"), html.Td("1 - 3"), html.Td("8 - 15"), html.Td("40 - 70"), html.Td("15 - 40")]),
-                    html.Tr([html.Td("Personal Loans"), html.Td("2.0 - 6.0"), html.Td("50 - 70"), html.Td("2 - 5"), html.Td("6 - 12"), html.Td("0 - 10"), html.Td("10 - 25")])
-                ])
-            ], bordered=True, hover=True, striped=True, className="mt-3")
-        ])
     ])
 
 app.layout = dbc.Container([

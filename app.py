@@ -111,12 +111,12 @@ def create_input_group(pool_id, pool_name):
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-original-term"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['original-term'], className="form-control text-center"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], step=0.1, className="form-control text-center"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control text-center"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control text-center"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control text-center"), width=2),
     ], className="mb-2 align-items-center")
 
 def create_economic_inputs(scenario):
     return dbc.Row([
-        dbc.Col(html.Div(scenario, className="fw-bold"), width=2),
+        dbc.Col(html.Div(scenario, className="fw-bold"), width=3),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], step=0.1, className="form-control text-center"), width=2),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control text-center"), width=2),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control text-center"), width=2),
@@ -223,7 +223,7 @@ def render_tab_content(active_tab):
                         dbc.Col(html.Div("Term (Years)", className="fw-bold text-center"), width=1),
                         dbc.Col(html.Div("Discount Rate (%)", className="fw-bold text-center"), width=1),
                         dbc.Col(html.Div("Undrawn (%)", className="fw-bold text-center"), width=1),
-                        dbc.Col(html.Div("Prepayment (%)", className="fw-bold text-center"), width=1),
+                        dbc.Col(html.Div("Prepayment (%)", className="fw-bold text-center"), width=2),
                     ], className="mb-2"),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
@@ -233,7 +233,7 @@ def render_tab_content(active_tab):
                 dbc.CardHeader(html.H4("Economic Scenarios", className="mb-0")),
                 dbc.CardBody([
                     dbc.Row([
-                        dbc.Col(html.Div("Scenario", className="fw-bold text-center"), width=2),
+                        dbc.Col(html.Div("Scenario", className="fw-bold text-center"), width=3),
                         dbc.Col(html.Div("GDP Growth (%)", className="fw-bold text-center"), width=2),
                         dbc.Col(html.Div("Unemployment (%)", className="fw-bold text-center"), width=2),
                         dbc.Col(html.Div("Fed Funds Rate (%)", className="fw-bold text-center"), width=2),
@@ -242,7 +242,10 @@ def render_tab_content(active_tab):
                     html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
                 ]),
             ], className="mb-4"),
-            dbc.Button("Calculate", id="calculate-button", color="primary", className="mb-4"),
+            dbc.Row([
+                dbc.Col(dbc.Button("Calculate", id="calculate-button", color="primary", className="me-2"), width="auto"),
+                dbc.Col(dbc.Button("Reset to Defaults", id="reset-button", color="secondary"), width="auto"),
+            ], className="mb-4"),
             html.Div(id="results-content"),
         ])
     elif active_tab == "model-explanation":
@@ -373,6 +376,43 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
         dbc.Col(ecl_by_scenario_chart, md=6),
         dbc.Col(ecl_summary, md=12, className="mt-4")
     ])
+
+@app.callback(
+    [Output({"type": "pool-input", "id": ALL}, "value"),
+     Output({"type": "economic-input", "id": ALL}, "value")],
+    Input("reset-button", "n_clicks"),
+    prevent_initial_call=True
+)
+def reset_to_defaults(n_clicks):
+    if n_clicks is None:
+        raise dash.exceptions.PreventUpdate
+
+    pool_default_values = [
+        value
+        for pool_id in ALL_POOLS
+        for value in [
+            DEFAULT_POOL_DATA[pool_id]['balance'],
+            DEFAULT_POOL_DATA[pool_id]['default-prob'],
+            DEFAULT_POOL_DATA[pool_id]['lgd'],
+            DEFAULT_POOL_DATA[pool_id]['original-term'],
+            DEFAULT_POOL_DATA[pool_id]['discount-rate'],
+            DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'],
+            DEFAULT_POOL_DATA[pool_id]['prepayment-rate']
+        ]
+    ]
+
+    economic_default_values = [
+        value
+        for scenario in ECONOMIC_SCENARIOS
+        for value in [
+            DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'],
+            DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'],
+            DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'],
+            DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index']
+        ]
+    ]
+
+    return pool_default_values, economic_default_values
 
 if __name__ == '__main__':
     app.run_server(debug=True)

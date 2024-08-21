@@ -36,15 +36,15 @@ DEFAULT_POOL_DATA = {
 }
 
 DEFAULT_ECONOMIC_DATA = {
-    "Baseline": {"gdp-growth": 2, "unemployment-rate": 5, "interest-rate": 3, "housing-price-index": 200},
-    "Adverse": {"gdp-growth": -1, "unemployment-rate": 8, "interest-rate": 5, "housing-price-index": 180},
-    "Severely Adverse": {"gdp-growth": -4, "unemployment-rate": 12, "interest-rate": 7, "housing-price-index": 160},
+    "Baseline": {"gdp-growth": 2, "unemployment-rate": 5, "fed-funds-rate": 3, "housing-price-index": 200},
+    "Adverse": {"gdp-growth": -1, "unemployment-rate": 8, "fed-funds-rate": 5, "housing-price-index": 180},
+    "Severely Adverse": {"gdp-growth": -4, "unemployment-rate": 12, "fed-funds-rate": 7, "housing-price-index": 160},
 }
 
 # Economic sensitivities (impact multipliers)
 ECONOMIC_SENSITIVITIES = {
-    "Commercial": {"gdp-growth": 1.2, "unemployment-rate": 0.8, "interest-rate": 1.5, "housing-price-index": 0.5},
-    "Consumer": {"gdp-growth": 0.8, "unemployment-rate": 1.2, "interest-rate": 1.0, "housing-price-index": 1.5}
+    "Commercial": {"gdp-growth": 0.7, "unemployment-rate": 0.8, "fed-funds-rate": 1.5, "housing-price-index": 0.5},
+    "Consumer": {"gdp-growth": 0.8, "unemployment-rate": 1.2, "fed-funds-rate": 1.0, "housing-price-index": 1.5}
 }
 
 class CECLEngine:
@@ -58,11 +58,18 @@ class CECLEngine:
         economic_data = self.economic_factors.loc[scenario]
         pool_type = "Commercial" if pool_id.startswith("C") else "Consumer"
         
-        economic_impact = sum(
-            ECONOMIC_SENSITIVITIES[pool_type][factor] * economic_data[factor] / 100
-            for factor in economic_data.index
-        )
-        
+        # Calculate economic impact
+        economic_impact = 0
+        for factor, sensitivity in ECONOMIC_SENSITIVITIES[pool_type].items():
+            if factor in ['gdp-growth', 'housing-price-index']:
+                # For GDP and HPI, higher values reduce risk
+                impact = -sensitivity * (economic_data[factor] - DEFAULT_ECONOMIC_DATA['Baseline'][factor]) / 100
+            else:
+                # For unemployment and fed funds rate, higher values increase risk
+                impact = sensitivity * (economic_data[factor] - DEFAULT_ECONOMIC_DATA['Baseline'][factor]) / 100
+            economic_impact += impact
+
+        # Adjust PD and LGD based on economic impact
         pd_adjusted = min(1, max(0, pool_data['default-prob'] / 100 * (1 + economic_impact)))
         lgd_adjusted = min(1, max(0, pool_data['lgd'] / 100 * (1 + economic_impact * 0.5)))
         
@@ -112,7 +119,7 @@ def create_economic_inputs(scenario):
         dbc.Col(html.Div(scenario, className="fw-bold"), width=2),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], className="form-control-sm"), width=2),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], className="form-control-sm"), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-interest-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['interest-rate'], className="form-control-sm"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], className="form-control-sm"), width=2),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control-sm"), width=2),
     ], className="mb-2 align-items-center")
 
@@ -136,7 +143,7 @@ def create_model_explanation():
         html.Ul([
             html.Li("GDP Growth: The annual growth rate of Gross Domestic Product, expressed as a percentage."),
             html.Li("Unemployment Rate: The percentage of the labor force that is unemployed."),
-            html.Li("Interest Rate: A benchmark interest rate (e.g., federal funds rate), expressed as a percentage."),
+            html.Li("Fed Funds Rate: The target interest rate set by the Federal Reserve, expressed as a percentage."),
             html.Li("Housing Price Index: An index representing the overall level of housing prices.")
         ]),
         html.H3("Calculation Methodology", className="mb-3"),
@@ -149,13 +156,14 @@ def create_model_explanation():
             html.Li("Weight the losses from different economic scenarios."),
             html.Li("Sum the weighted, discounted expected losses to arrive at the lifetime ECL.")
         ]),
-        html.H3("Impact of Prepayment Rate", className="mb-3"),
-        html.P("The prepayment rate affects the ECL calculation in two main ways:"),
-        html.Ol([
-            html.Li("It reduces the outstanding balance of the loan pool each year, which in turn reduces the exposure at default."),
-            html.Li("It effectively shortens the average life of the loan pool, potentially leading to fewer years of calculated losses.")
+        html.H3("Impact of Economic Factors", className="mb-3"),
+        html.P("The model considers the following economic impacts:"),
+        html.Ul([
+            html.Li("GDP Growth: Higher GDP growth reduces risk, leading to lower ECL."),
+            html.Li("Unemployment Rate: Higher unemployment increases risk, leading to higher ECL."),
+            html.Li("Fed Funds Rate: Higher rates generally increase risk, leading to higher ECL."),
+            html.Li("Housing Price Index (HPI): Higher HPI reduces risk, leading to lower ECL.")
         ]),
-        html.P("Higher prepayment rates generally lead to lower ECL, as they reduce the overall exposure to credit risk over time."),
         html.H3("Economic Scenario Weighting", className="mb-3"),
         html.P(f"The model uses the following weights for economic scenarios: Baseline ({calc_engine.scenario_weights['Baseline']}), Adverse ({calc_engine.scenario_weights['Adverse']}), Severely Adverse ({calc_engine.scenario_weights['Severely Adverse']})."),
         html.H3("Economic Sensitivities", className="mb-3"),
@@ -228,7 +236,7 @@ def render_tab_content(active_tab):
                         dbc.Col(html.Div("Scenario", className="fw-bold"), width=2),
                         dbc.Col(html.Div("GDP Growth (%)", className="fw-bold"), width=2),
                         dbc.Col(html.Div("Unemployment (%)", className="fw-bold"), width=2),
-                        dbc.Col(html.Div("Interest Rate (%)", className="fw-bold"), width=2),
+                        dbc.Col(html.Div("Fed Funds Rate (%)", className="fw-bold"), width=2),
                         dbc.Col(html.Div("HPI", className="fw-bold"), width=2),
                     ], className="mb-2"),
                     html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
@@ -272,7 +280,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
                 calc_engine.economic_factors.loc[scenario] = {
                     'gdp-growth': float(economic_inputs[i*4]),
                     'unemployment-rate': float(economic_inputs[i*4 + 1]),
-                    'interest-rate': float(economic_inputs[i*4 + 2]),
+                    'fed-funds-rate': float(economic_inputs[i*4 + 2]),
                     'housing-price-index': float(economic_inputs[i*4 + 3])
                 }
             except (IndexError, ValueError):

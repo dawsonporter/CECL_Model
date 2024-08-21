@@ -77,9 +77,6 @@ The dashboard calculates the lifetime expected credit losses (ECL) by considerin
 ## Contributing
 Contributions to improve the CECL Model Dashboard are welcome. Please feel free to submit pull requests or open issues to suggest improvements or report bugs.
 
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Acknowledgments
 - Dash and Plotly teams for their excellent data visualization libraries.
 - The financial modeling community for insights into CECL calculation methodologies.

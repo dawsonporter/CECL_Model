@@ -21,24 +21,24 @@ ECONOMIC_SCENARIOS = ["Baseline", "Adverse", "Severely Adverse"]
 
 # Default data with more realistic loan balances (in millions) and added prepayment rates
 DEFAULT_POOL_DATA = {
-    "C1": {"balance": 2000, "default-prob": 2, "lgd": 35, "original-term": 10, "discount-rate": 5, "undrawn-percentage": 10, "prepayment-rate": 5},
-    "C2": {"balance": 1800, "default-prob": 2.5, "lgd": 40, "original-term": 8, "discount-rate": 5, "undrawn-percentage": 15, "prepayment-rate": 4},
-    "C3": {"balance": 1500, "default-prob": 1.5, "lgd": 30, "original-term": 12, "discount-rate": 5, "undrawn-percentage": 5, "prepayment-rate": 3},
-    "C4": {"balance": 2500, "default-prob": 1.8, "lgd": 25, "original-term": 15, "discount-rate": 5, "undrawn-percentage": 5, "prepayment-rate": 6},
-    "C5": {"balance": 3000, "default-prob": 1, "lgd": 45, "original-term": 7, "discount-rate": 5, "undrawn-percentage": 20, "prepayment-rate": 8},
-    "C6": {"balance": 2000, "default-prob": 3, "lgd": 50, "original-term": 5, "discount-rate": 5, "undrawn-percentage": 25, "prepayment-rate": 7},
-    "C7": {"balance": 1000, "default-prob": 4, "lgd": 55, "original-term": 4, "discount-rate": 5, "undrawn-percentage": 30, "prepayment-rate": 10},
-    "C8": {"balance": 500, "default-prob": 3.5, "lgd": 45, "original-term": 6, "discount-rate": 5, "undrawn-percentage": 10, "prepayment-rate": 2},
-    "P1": {"balance": 5000, "default-prob": 0.5, "lgd": 20, "original-term": 30, "discount-rate": 4, "undrawn-percentage": 0, "prepayment-rate": 12},
-    "P2": {"balance": 1500, "default-prob": 2, "lgd": 40, "original-term": 6, "discount-rate": 6, "undrawn-percentage": 0, "prepayment-rate": 15},
-    "P3": {"balance": 800, "default-prob": 5, "lgd": 70, "original-term": 3, "discount-rate": 10, "undrawn-percentage": 60, "prepayment-rate": 20},
-    "P4": {"balance": 500, "default-prob": 4, "lgd": 60, "original-term": 4, "discount-rate": 8, "undrawn-percentage": 0, "prepayment-rate": 8},
+    "C1": {"balance": 2000, "default-prob": 2.0, "lgd": 35.0, "original-term": 10, "discount-rate": 5.0, "undrawn-percentage": 10, "prepayment-rate": 5},
+    "C2": {"balance": 1800, "default-prob": 2.5, "lgd": 40.0, "original-term": 8, "discount-rate": 5.0, "undrawn-percentage": 15, "prepayment-rate": 4},
+    "C3": {"balance": 1500, "default-prob": 1.5, "lgd": 30.0, "original-term": 12, "discount-rate": 5.0, "undrawn-percentage": 5, "prepayment-rate": 3},
+    "C4": {"balance": 2500, "default-prob": 1.8, "lgd": 25.0, "original-term": 15, "discount-rate": 5.0, "undrawn-percentage": 5, "prepayment-rate": 6},
+    "C5": {"balance": 3000, "default-prob": 1.0, "lgd": 45.0, "original-term": 7, "discount-rate": 5.0, "undrawn-percentage": 20, "prepayment-rate": 8},
+    "C6": {"balance": 2000, "default-prob": 3.0, "lgd": 50.0, "original-term": 5, "discount-rate": 5.0, "undrawn-percentage": 25, "prepayment-rate": 7},
+    "C7": {"balance": 1000, "default-prob": 4.0, "lgd": 55.0, "original-term": 4, "discount-rate": 5.0, "undrawn-percentage": 30, "prepayment-rate": 10},
+    "C8": {"balance": 500, "default-prob": 3.5, "lgd": 45.0, "original-term": 6, "discount-rate": 5.0, "undrawn-percentage": 10, "prepayment-rate": 2},
+    "P1": {"balance": 5000, "default-prob": 0.5, "lgd": 20.0, "original-term": 30, "discount-rate": 4.0, "undrawn-percentage": 0, "prepayment-rate": 12},
+    "P2": {"balance": 1500, "default-prob": 2.0, "lgd": 40.0, "original-term": 6, "discount-rate": 6.0, "undrawn-percentage": 0, "prepayment-rate": 15},
+    "P3": {"balance": 800, "default-prob": 5.0, "lgd": 70.0, "original-term": 3, "discount-rate": 10.0, "undrawn-percentage": 60, "prepayment-rate": 20},
+    "P4": {"balance": 500, "default-prob": 4.0, "lgd": 60.0, "original-term": 4, "discount-rate": 8.0, "undrawn-percentage": 0, "prepayment-rate": 8},
 }
 
 DEFAULT_ECONOMIC_DATA = {
-    "Baseline": {"gdp-growth": 2, "unemployment-rate": 5, "fed-funds-rate": 3, "housing-price-index": 200},
-    "Adverse": {"gdp-growth": -1, "unemployment-rate": 8, "fed-funds-rate": 5, "housing-price-index": 180},
-    "Severely Adverse": {"gdp-growth": -4, "unemployment-rate": 12, "fed-funds-rate": 7, "housing-price-index": 160},
+    "Baseline": {"gdp-growth": 2.0, "unemployment-rate": 5.0, "fed-funds-rate": 3.00, "housing-price-index": 200},
+    "Adverse": {"gdp-growth": -1.0, "unemployment-rate": 8.0, "fed-funds-rate": 5.00, "housing-price-index": 180},
+    "Severely Adverse": {"gdp-growth": -4.0, "unemployment-rate": 12.0, "fed-funds-rate": 7.00, "housing-price-index": 160},
 }
 
 # Economic sensitivities (impact multipliers)
@@ -105,22 +105,22 @@ calc_engine = CECLEngine()
 def create_input_group(pool_id, pool_name):
     return dbc.Row([
         dbc.Col(html.Div(pool_name, className="fw-bold"), width=2),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="text", value=f"{DEFAULT_POOL_DATA[pool_id]['balance']:,}", className="form-control-sm"), width=2),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob'], className="form-control-sm"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd'], className="form-control-sm"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-original-term"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['original-term'], className="form-control-sm"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], className="form-control-sm"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control-sm"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control-sm"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="text", value=f"{DEFAULT_POOL_DATA[pool_id]['balance']:,}", className="form-control"), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob'], step=0.1, className="form-control"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd'], step=0.1, className="form-control"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-original-term"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['original-term'], className="form-control"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], step=0.1, className="form-control"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control"), width=1),
     ], className="mb-2 align-items-center")
 
 def create_economic_inputs(scenario):
     return dbc.Row([
         dbc.Col(html.Div(scenario, className="fw-bold"), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], className="form-control-sm"), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], className="form-control-sm"), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], className="form-control-sm"), width=2),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control-sm"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], step=0.1, className="form-control"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control"), width=2),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control"), width=2),
     ], className="mb-2 align-items-center")
 
 def create_model_explanation():
@@ -216,14 +216,14 @@ def render_tab_content(active_tab):
                 dbc.CardHeader(html.H4("Loan Pools", className="mb-0")),
                 dbc.CardBody([
                     dbc.Row([
-                        dbc.Col(html.Div("Pool Name", className="fw-bold"), width=2),
-                        dbc.Col(html.Div("Balance ($M)", className="fw-bold"), width=2),
-                        dbc.Col(html.Div("PD (%)", className="fw-bold"), width=1),
-                        dbc.Col(html.Div("LGD (%)", className="fw-bold"), width=1),
-                        dbc.Col(html.Div("Term (Years)", className="fw-bold"), width=1),
-                        dbc.Col(html.Div("Discount Rate (%)", className="fw-bold"), width=1),
-                        dbc.Col(html.Div("Undrawn (%)", className="fw-bold"), width=1),
-                        dbc.Col(html.Div("Prepayment (%)", className="fw-bold"), width=1),
+                        dbc.Col(html.Div("Pool Name", className="fw-bold text-center"), width=2),
+                        dbc.Col(html.Div("Balance ($M)", className="fw-bold text-center"), width=2),
+                        dbc.Col(html.Div("PD (%)", className="fw-bold text-center"), width=1),
+                        dbc.Col(html.Div("LGD (%)", className="fw-bold text-center"), width=1),
+                        dbc.Col(html.Div("Term (Years)", className="fw-bold text-center"), width=1),
+                        dbc.Col(html.Div("Discount Rate (%)", className="fw-bold text-center"), width=1),
+                        dbc.Col(html.Div("Undrawn (%)", className="fw-bold text-center"), width=1),
+                        dbc.Col(html.Div("Prepayment (%)", className="fw-bold text-center"), width=1),
                     ], className="mb-2"),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
@@ -233,11 +233,11 @@ def render_tab_content(active_tab):
                 dbc.CardHeader(html.H4("Economic Scenarios", className="mb-0")),
                 dbc.CardBody([
                     dbc.Row([
-                        dbc.Col(html.Div("Scenario", className="fw-bold"), width=2),
-                        dbc.Col(html.Div("GDP Growth (%)", className="fw-bold"), width=2),
-                        dbc.Col(html.Div("Unemployment (%)", className="fw-bold"), width=2),
-                        dbc.Col(html.Div("Fed Funds Rate (%)", className="fw-bold"), width=2),
-                        dbc.Col(html.Div("HPI", className="fw-bold"), width=2),
+                        dbc.Col(html.Div("Scenario", className="fw-bold text-center"), width=2),
+                        dbc.Col(html.Div("GDP Growth (%)", className="fw-bold text-center"), width=2),
+                        dbc.Col(html.Div("Unemployment (%)", className="fw-bold text-center"), width=2),
+                        dbc.Col(html.Div("Fed Funds Rate (%)", className="fw-bold text-center"), width=2),
+                        dbc.Col(html.Div("HPI", className="fw-bold text-center"), width=2),
                     ], className="mb-2"),
                     html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
                 ]),
@@ -387,7 +387,22 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
     State({"type": "pool-input", "id": ALL}, "id"),
 )
 def format_number(values, ids):
-    return [f"{float(value.replace(',', '')):,.0f}" if "-balance" in id_dict["id"] else value for value, id_dict in zip(values, ids)]
+    formatted_values = []
+    for value, id_dict in zip(values, ids):
+        if "-balance" in id_dict["id"]:
+            try:
+                formatted_value = f"{float(value.replace(',', '')):,.0f}"
+            except ValueError:
+                formatted_value = value
+        elif any(key in id_dict["id"] for key in ["-default-prob", "-lgd", "-discount-rate"]):
+            try:
+                formatted_value = f"{float(value):.1f}"
+            except ValueError:
+                formatted_value = value
+        else:
+            formatted_value = value
+        formatted_values.append(formatted_value)
+    return formatted_values
 
 if __name__ == '__main__':
     app.run_server(debug=True)

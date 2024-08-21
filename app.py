@@ -21,18 +21,18 @@ ECONOMIC_SCENARIOS = ["Baseline", "Adverse", "Severely Adverse"]
 
 # Default data with more realistic loan balances (in millions) and added prepayment rates
 DEFAULT_POOL_DATA = {
-    "C1": {"balance": 2000, "default-prob": 2, "lgd": 35, "average-life": 7, "discount-rate": 5, "undrawn-percentage": 10, "prepayment-rate": 5},
-    "C2": {"balance": 1800, "default-prob": 2.5, "lgd": 40, "average-life": 6, "discount-rate": 5, "undrawn-percentage": 15, "prepayment-rate": 4},
-    "C3": {"balance": 1500, "default-prob": 1.5, "lgd": 30, "average-life": 8, "discount-rate": 5, "undrawn-percentage": 5, "prepayment-rate": 3},
-    "C4": {"balance": 2500, "default-prob": 1.8, "lgd": 25, "average-life": 10, "discount-rate": 5, "undrawn-percentage": 5, "prepayment-rate": 6},
-    "C5": {"balance": 3000, "default-prob": 1, "lgd": 45, "average-life": 5, "discount-rate": 5, "undrawn-percentage": 20, "prepayment-rate": 8},
-    "C6": {"balance": 2000, "default-prob": 3, "lgd": 50, "average-life": 4, "discount-rate": 5, "undrawn-percentage": 25, "prepayment-rate": 7},
-    "C7": {"balance": 1000, "default-prob": 4, "lgd": 55, "average-life": 3, "discount-rate": 5, "undrawn-percentage": 30, "prepayment-rate": 10},
-    "C8": {"balance": 500, "default-prob": 3.5, "lgd": 45, "average-life": 5, "discount-rate": 5, "undrawn-percentage": 10, "prepayment-rate": 2},
-    "P1": {"balance": 5000, "default-prob": 0.5, "lgd": 20, "average-life": 15, "discount-rate": 4, "undrawn-percentage": 0, "prepayment-rate": 12},
-    "P2": {"balance": 1500, "default-prob": 2, "lgd": 40, "average-life": 5, "discount-rate": 6, "undrawn-percentage": 0, "prepayment-rate": 15},
-    "P3": {"balance": 800, "default-prob": 5, "lgd": 70, "average-life": 2, "discount-rate": 10, "undrawn-percentage": 60, "prepayment-rate": 20},
-    "P4": {"balance": 500, "default-prob": 4, "lgd": 60, "average-life": 3, "discount-rate": 8, "undrawn-percentage": 0, "prepayment-rate": 8},
+    "C1": {"balance": 2000, "default-prob": 2, "lgd": 35, "original-term": 10, "discount-rate": 5, "undrawn-percentage": 10, "prepayment-rate": 5},
+    "C2": {"balance": 1800, "default-prob": 2.5, "lgd": 40, "original-term": 8, "discount-rate": 5, "undrawn-percentage": 15, "prepayment-rate": 4},
+    "C3": {"balance": 1500, "default-prob": 1.5, "lgd": 30, "original-term": 12, "discount-rate": 5, "undrawn-percentage": 5, "prepayment-rate": 3},
+    "C4": {"balance": 2500, "default-prob": 1.8, "lgd": 25, "original-term": 15, "discount-rate": 5, "undrawn-percentage": 5, "prepayment-rate": 6},
+    "C5": {"balance": 3000, "default-prob": 1, "lgd": 45, "original-term": 7, "discount-rate": 5, "undrawn-percentage": 20, "prepayment-rate": 8},
+    "C6": {"balance": 2000, "default-prob": 3, "lgd": 50, "original-term": 5, "discount-rate": 5, "undrawn-percentage": 25, "prepayment-rate": 7},
+    "C7": {"balance": 1000, "default-prob": 4, "lgd": 55, "original-term": 4, "discount-rate": 5, "undrawn-percentage": 30, "prepayment-rate": 10},
+    "C8": {"balance": 500, "default-prob": 3.5, "lgd": 45, "original-term": 6, "discount-rate": 5, "undrawn-percentage": 10, "prepayment-rate": 2},
+    "P1": {"balance": 5000, "default-prob": 0.5, "lgd": 20, "original-term": 30, "discount-rate": 4, "undrawn-percentage": 0, "prepayment-rate": 12},
+    "P2": {"balance": 1500, "default-prob": 2, "lgd": 40, "original-term": 6, "discount-rate": 6, "undrawn-percentage": 0, "prepayment-rate": 15},
+    "P3": {"balance": 800, "default-prob": 5, "lgd": 70, "original-term": 3, "discount-rate": 10, "undrawn-percentage": 60, "prepayment-rate": 20},
+    "P4": {"balance": 500, "default-prob": 4, "lgd": 60, "original-term": 4, "discount-rate": 8, "undrawn-percentage": 0, "prepayment-rate": 8},
 }
 
 DEFAULT_ECONOMIC_DATA = {
@@ -53,7 +53,7 @@ class CECLEngine:
         self.asset_pools = DEFAULT_POOL_DATA.copy()
         self.scenario_weights = {"Baseline": 0.4, "Adverse": 0.3, "Severely Adverse": 0.3}
 
-    def calculate_expected_loss(self, pool_id, scenario):
+    def calculate_expected_loss(self, pool_id, scenario, year):
         pool_data = self.asset_pools[pool_id]
         economic_data = self.economic_factors.loc[scenario]
         pool_type = "Commercial" if pool_id.startswith("C") else "Consumer"
@@ -63,32 +63,34 @@ class CECLEngine:
             for factor in economic_data.index
         )
         
-        pd_adjusted = min(100, max(0, pool_data['default-prob'] * (1 + economic_impact)))
-        lgd_adjusted = min(100, max(0, pool_data['lgd'] * (1 + economic_impact * 0.5)))
-        ead = pool_data['balance'] * (1 + pool_data['undrawn-percentage'] / 100)
+        pd_adjusted = min(1, max(0, pool_data['default-prob'] / 100 * (1 + economic_impact)))
+        lgd_adjusted = min(1, max(0, pool_data['lgd'] / 100 * (1 + economic_impact * 0.5)))
         
-        return (pd_adjusted / 100) * (lgd_adjusted / 100) * ead
+        # Calculate remaining balance considering prepayments
+        remaining_balance = pool_data['balance'] * (1 - pool_data['prepayment-rate'] / 100) ** year
+        ead = remaining_balance * (1 + pool_data['undrawn-percentage'] / 100)
+        
+        return pd_adjusted * lgd_adjusted * ead
 
     def calculate_lifetime_ecl(self, pool_id):
         pool_data = self.asset_pools[pool_id]
-        lifetime = pool_data['average-life']
+        original_term = int(pool_data['original-term'])
         prepayment_rate = pool_data['prepayment-rate'] / 100
-        
+        discount_rate = pool_data['discount-rate'] / 100
+
         total_ecl = 0
-        remaining_balance = pool_data['balance']
-        
-        for year in range(int(lifetime)):
+        for year in range(original_term):
             year_ecl = sum(
-                self.scenario_weights[scenario] * self.calculate_expected_loss(pool_id, scenario)
+                self.scenario_weights[scenario] * self.calculate_expected_loss(pool_id, scenario, year)
                 for scenario in ECONOMIC_SCENARIOS
             )
             
-            total_ecl += year_ecl / (1 + pool_data['discount-rate'] / 100)**(year+1)
-            remaining_balance *= (1 - prepayment_rate)
-            
-            if remaining_balance < 0.01 * pool_data['balance']:  # Stop if less than 1% of original balance remains
+            total_ecl += year_ecl / (1 + discount_rate) ** (year + 1)
+
+            # Break if remaining balance is less than 1% of original balance
+            if pool_data['balance'] * (1 - prepayment_rate) ** (year + 1) < 0.01 * pool_data['balance']:
                 break
-        
+
         return total_ecl
 
 calc_engine = CECLEngine()
@@ -99,7 +101,7 @@ def create_input_group(pool_id, pool_name):
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="text", value=f"{DEFAULT_POOL_DATA[pool_id]['balance']:,}", className="form-control-sm"), width=2),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob'], className="form-control-sm"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd'], className="form-control-sm"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-average-life"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['average-life'], className="form-control-sm"), width=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-original-term"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['original-term'], className="form-control-sm"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], className="form-control-sm"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control-sm"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control-sm"), width=1),
@@ -125,7 +127,7 @@ def create_model_explanation():
             html.Li("Balance: The total outstanding balance of the loan pool (in millions of dollars)."),
             html.Li("Default Probability (PD): The likelihood of default over the life of the loan, expressed as a percentage."),
             html.Li("Loss Given Default (LGD): The portion of the loan balance that is expected to be lost if a default occurs, expressed as a percentage."),
-            html.Li("Average Life: The expected average life of the loans in the pool, in years."),
+            html.Li("Original Term: The original term of the loans in the pool, in years."),
             html.Li("Discount Rate: The rate used to discount future cash flows, expressed as a percentage."),
             html.Li("Undrawn Percentage: The portion of committed but undrawn balances, expressed as a percentage of the total commitment."),
             html.Li("Prepayment Rate: The expected rate of early repayment, expressed as a percentage of the remaining balance per year.")
@@ -147,6 +149,13 @@ def create_model_explanation():
             html.Li("Weight the losses from different economic scenarios."),
             html.Li("Sum the weighted, discounted expected losses to arrive at the lifetime ECL.")
         ]),
+        html.H3("Impact of Prepayment Rate", className="mb-3"),
+        html.P("The prepayment rate affects the ECL calculation in two main ways:"),
+        html.Ol([
+            html.Li("It reduces the outstanding balance of the loan pool each year, which in turn reduces the exposure at default."),
+            html.Li("It effectively shortens the average life of the loan pool, potentially leading to fewer years of calculated losses.")
+        ]),
+        html.P("Higher prepayment rates generally lead to lower ECL, as they reduce the overall exposure to credit risk over time."),
         html.H3("Economic Scenario Weighting", className="mb-3"),
         html.P(f"The model uses the following weights for economic scenarios: Baseline ({calc_engine.scenario_weights['Baseline']}), Adverse ({calc_engine.scenario_weights['Adverse']}), Severely Adverse ({calc_engine.scenario_weights['Severely Adverse']})."),
         html.H3("Economic Sensitivities", className="mb-3"),
@@ -167,10 +176,10 @@ def create_model_explanation():
         html.Div([
             dbc.Table([
                 html.Thead([
-                    html.Tr([html.Th("Pool Type"), html.Th("PD Range (%)"), html.Th("LGD Range (%)"), html.Th("Average Life (Years)"), html.Th("Discount Rate (%)"), html.Th("Undrawn (%)"), html.Th("Prepayment Rate (%)")])
+                    html.Tr([html.Th("Pool Type"), html.Th("PD Range (%)"), html.Th("LGD Range (%)"), html.Th("Original Term (Years)"), html.Th("Discount Rate (%)"), html.Th("Undrawn (%)"), html.Th("Prepayment Rate (%)")])
                 ]),
                 html.Tbody([
-                    html.Tr([html.Td("CRE"), html.Td("1.0 - 3.0"), html.Td("20 - 45"), html.Td("5 - 10"), html.Td("4 - 6"), html.Td("5 - 20"), html.Td("2 - 8")]),
+                    html.Tr([html.Td("CRE"), html.Td("1.0 - 3.0"), html.Td("20 - 45"), html.Td("5 - 15"), html.Td("4 - 6"), html.Td("5 - 20"), html.Td("2 - 8")]),
                     html.Tr([html.Td("C&I"), html.Td("0.5 - 4.0"), html.Td("30 - 60"), html.Td("3 - 7"), html.Td("4 - 7"), html.Td("20 - 40"), html.Td("5 - 15")]),
                     html.Tr([html.Td("Small Business"), html.Td("2.0 - 6.0"), html.Td("40 - 70"), html.Td("2 - 5"), html.Td("5 - 8"), html.Td("10 - 30"), html.Td("8 - 20")]),
                     html.Tr([html.Td("Residential Mortgages"), html.Td("0.2 - 1.0"), html.Td("10 - 30"), html.Td("15 - 30"), html.Td("3 - 5"), html.Td("0 - 5"), html.Td("5 - 25")]),
@@ -203,7 +212,7 @@ def render_tab_content(active_tab):
                         dbc.Col(html.Div("Balance ($M)", className="fw-bold"), width=2),
                         dbc.Col(html.Div("PD (%)", className="fw-bold"), width=1),
                         dbc.Col(html.Div("LGD (%)", className="fw-bold"), width=1),
-                        dbc.Col(html.Div("Avg Life (Years)", className="fw-bold"), width=1),
+                        dbc.Col(html.Div("Term (Years)", className="fw-bold"), width=1),
                         dbc.Col(html.Div("Discount Rate (%)", className="fw-bold"), width=1),
                         dbc.Col(html.Div("Undrawn (%)", className="fw-bold"), width=1),
                         dbc.Col(html.Div("Prepayment (%)", className="fw-bold"), width=1),
@@ -248,7 +257,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
                 'balance': float(pool_inputs[i*7].replace(',', '')),
                 'default-prob': float(pool_inputs[i*7 + 1]),
                 'lgd': float(pool_inputs[i*7 + 2]),
-                'average-life': float(pool_inputs[i*7 + 3]),
+                'original-term': int(float(pool_inputs[i*7 + 3])),
                 'discount-rate': float(pool_inputs[i*7 + 4]),
                 'undrawn-percentage': float(pool_inputs[i*7 + 5]),
                 'prepayment-rate': float(pool_inputs[i*7 + 6]),
@@ -285,7 +294,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
     scenario_data = {scenario: [] for scenario in ECONOMIC_SCENARIOS}
     for pool_id in ALL_POOLS:
         for scenario in ECONOMIC_SCENARIOS:
-            scenario_data[scenario].append(calc_engine.calculate_expected_loss(pool_id, scenario))
+            scenario_data[scenario].append(calc_engine.calculate_expected_loss(pool_id, scenario, 0))
 
     ecl_by_scenario_chart = dcc.Graph(
         figure={

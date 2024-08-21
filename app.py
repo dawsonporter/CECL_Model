@@ -105,7 +105,7 @@ calc_engine = CECLEngine()
 def create_input_group(pool_id, pool_name):
     return dbc.Row([
         dbc.Col(html.Div(pool_name, className="fw-bold"), width=2),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="text", value=f"{DEFAULT_POOL_DATA[pool_id]['balance']:,}", className="form-control text-center"), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['balance'], className="form-control text-center"), width=2),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob'], step=0.1, className="form-control text-center"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd'], step=0.1, className="form-control text-center"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-original-term"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['original-term'], className="form-control text-center"), width=1),
@@ -179,6 +179,24 @@ def create_model_explanation():
                 ])
             ], bordered=True, hover=True, striped=True, className="mt-3")
         ]),
+        html.H3("Typical Input Ranges", className="mb-3"),
+        html.P("The following table provides typical ranges for input parameters across different loan pools:"),
+        html.Div([
+            dbc.Table([
+                html.Thead([
+                    html.Tr([html.Th("Pool Type"), html.Th("PD Range (%)"), html.Th("LGD Range (%)"), html.Th("Average Life (Years)"), html.Th("Discount Rate (%)"), html.Th("Undrawn (%)"), html.Th("Prepayment (%)")])
+                ]),
+                html.Tbody([
+                    html.Tr([html.Td("CRE"), html.Td("1.0 - 3.0"), html.Td("20 - 45"), html.Td("5 - 10"), html.Td("4 - 6"), html.Td("5 - 20"), html.Td("2 - 10")]),
+                    html.Tr([html.Td("C&I"), html.Td("0.5 - 4.0"), html.Td("30 - 60"), html.Td("3 - 7"), html.Td("4 - 7"), html.Td("20 - 40"), html.Td("5 - 15")]),
+                    html.Tr([html.Td("Small Business"), html.Td("2.0 - 6.0"), html.Td("40 - 70"), html.Td("2 - 5"), html.Td("5 - 8"), html.Td("10 - 30"), html.Td("5 - 20")]),
+                    html.Tr([html.Td("Residential Mortgages"), html.Td("0.2 - 1.0"), html.Td("10 - 30"), html.Td("15 - 30"), html.Td("3 - 5"), html.Td("0 - 5"), html.Td("5 - 15")]),
+                    html.Tr([html.Td("Auto Loans"), html.Td("1.0 - 3.0"), html.Td("30 - 60"), html.Td("3 - 7"), html.Td("4 - 8"), html.Td("0 - 5"), html.Td("10 - 25")]),
+                    html.Tr([html.Td("Credit Cards"), html.Td("3.0 - 8.0"), html.Td("60 - 80"), html.Td("1 - 3"), html.Td("8 - 15"), html.Td("40 - 70"), html.Td("15 - 30")]),
+                    html.Tr([html.Td("Personal Loans"), html.Td("2.0 - 6.0"), html.Td("50 - 70"), html.Td("2 - 5"), html.Td("6 - 12"), html.Td("0 - 10"), html.Td("10 - 20")])
+                ])
+            ], bordered=True, hover=True, striped=True, className="mt-3")
+        ])
     ])
 
 app.layout = dbc.Container([
@@ -242,31 +260,24 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
 
     # Update asset pools
     for i, pool_id in enumerate(ALL_POOLS):
-        try:
-            calc_engine.asset_pools[pool_id] = {
-                'balance': float(pool_inputs[i*7].replace(',', '')),
-                'default-prob': float(pool_inputs[i*7 + 1]),
-                'lgd': float(pool_inputs[i*7 + 2]),
-                'original-term': int(float(pool_inputs[i*7 + 3])),
-                'discount-rate': float(pool_inputs[i*7 + 4]),
-                'undrawn-percentage': float(pool_inputs[i*7 + 5]),
-                'prepayment-rate': float(pool_inputs[i*7 + 6]),
-            }
-        except (IndexError, ValueError):
-            pass
+        calc_engine.asset_pools[pool_id] = {
+            'balance': float(pool_inputs[i*7]),
+            'default-prob': float(pool_inputs[i*7 + 1]),
+            'lgd': float(pool_inputs[i*7 + 2]),
+            'original-term': int(float(pool_inputs[i*7 + 3])),
+            'discount-rate': float(pool_inputs[i*7 + 4]),
+            'undrawn-percentage': float(pool_inputs[i*7 + 5]),
+            'prepayment-rate': float(pool_inputs[i*7 + 6]),
+        }
 
     # Update economic factors
-    if economic_inputs:
-        for i, scenario in enumerate(ECONOMIC_SCENARIOS):
-            try:
-                calc_engine.economic_factors.loc[scenario] = {
-                    'gdp-growth': float(economic_inputs[i*4]),
-                    'unemployment-rate': float(economic_inputs[i*4 + 1]),
-                    'fed-funds-rate': float(economic_inputs[i*4 + 2]),
-                    'housing-price-index': float(economic_inputs[i*4 + 3])
-                }
-            except (IndexError, ValueError):
-                pass
+    for i, scenario in enumerate(ECONOMIC_SCENARIOS):
+        calc_engine.economic_factors.loc[scenario] = {
+            'gdp-growth': float(economic_inputs[i*4]),
+            'unemployment-rate': float(economic_inputs[i*4 + 1]),
+            'fed-funds-rate': float(economic_inputs[i*4 + 2]),
+            'housing-price-index': float(economic_inputs[i*4 + 3])
+        }
 
     # Calculate ECL for each pool
     ecl_data = [(pool_id, ALL_POOLS[pool_id], calc_engine.calculate_lifetime_ecl(pool_id)) for pool_id in ALL_POOLS]
@@ -362,29 +373,6 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
         dbc.Col(ecl_by_scenario_chart, md=6),
         dbc.Col(ecl_summary, md=12, className="mt-4")
     ])
-
-@app.callback(
-    Output({"type": "pool-input", "id": ALL}, "value"),
-    Input({"type": "pool-input", "id": ALL}, "value"),
-    State({"type": "pool-input", "id": ALL}, "id"),
-)
-def format_number(values, ids):
-    formatted_values = []
-    for value, id_dict in zip(values, ids):
-        if "-balance" in id_dict["id"]:
-            try:
-                formatted_value = f"{float(value.replace(',', '')):,.0f}"
-            except ValueError:
-                formatted_value = value
-        elif any(key in id_dict["id"] for key in ["-default-prob", "-lgd", "-discount-rate"]):
-            try:
-                formatted_value = f"{float(value):.1f}"
-            except ValueError:
-                formatted_value = value
-        else:
-            formatted_value = value
-        formatted_values.append(formatted_value)
-    return formatted_values
 
 if __name__ == '__main__':
     app.run_server(debug=True)

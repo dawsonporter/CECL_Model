@@ -52,8 +52,8 @@ class CECLEngine:
         self.economic_factors = pd.DataFrame(DEFAULT_ECONOMIC_DATA).T
         self.asset_pools = DEFAULT_POOL_DATA.copy()
         self.scenario_weights = {"Baseline": 0.4, "Adverse": 0.3, "Severely Adverse": 0.3}
-        self.pd_multiplier = 1.0
-        self.lgd_multiplier = 1.0
+        self.pd_multiplier = 0.8  # Updated default value
+        self.lgd_multiplier = 0.8  # Updated default value
 
     def calculate_expected_loss(self, pool_id, scenario, year):
         pool_data = self.asset_pools[pool_id]
@@ -132,11 +132,11 @@ def create_weights_and_multipliers_inputs():
             dbc.Row([
                 dbc.Col([
                     html.Div("PD Multiplier", className="fw-bold"),
-                    dbc.Input(id="pd-multiplier", type="number", value=1.0, min=0, max=2, step=0.1, className="form-control text-center")
+                    dbc.Input(id="pd-multiplier", type="number", value=0.8, min=0, max=2, step=0.1, className="form-control text-center")  # Updated default value
                 ], width=2),
                 dbc.Col([
                     html.Div("LGD Multiplier", className="fw-bold"),
-                    dbc.Input(id="lgd-multiplier", type="number", value=1.0, min=0, max=2, step=0.1, className="form-control text-center")
+                    dbc.Input(id="lgd-multiplier", type="number", value=0.8, min=0, max=2, step=0.1, className="form-control text-center")  # Updated default value
                 ], width=2),
                 dbc.Col([
                     html.Div("Baseline Weight", className="fw-bold"),
@@ -179,8 +179,8 @@ def create_model_explanation():
         ]),
         html.H4("Weights and Multipliers:", className="mb-2"),
         html.Ul([
-            html.Li("PD Multiplier: A factor to adjust the calculated Probability of Default across all pools."),
-            html.Li("LGD Multiplier: A factor to adjust the calculated Loss Given Default across all pools."),
+            html.Li("PD Multiplier: A factor to adjust the calculated Probability of Default across all pools. Default value is 0.8, providing a more conservative estimate."),
+            html.Li("LGD Multiplier: A factor to adjust the calculated Loss Given Default across all pools. Default value is 0.8, providing a more conservative estimate."),
             html.Li("Economic Scenario Weights: The relative importance given to each economic scenario (Baseline, Adverse, Severely Adverse) in the final ECL calculation.")
         ]),
         html.H3("Calculation Methodology", className="mb-3"),
@@ -202,7 +202,7 @@ def create_model_explanation():
             html.Li("Housing Price Index (HPI): Higher HPI reduces risk, leading to lower ECL.")
         ]),
         html.H3("PD and LGD Multipliers", className="mb-3"),
-        html.P("The PD and LGD multipliers allow for additional adjustment of the calculated Probability of Default and Loss Given Default values. This can be used to stress test the model or to account for additional factors not directly captured by the economic scenarios."),
+        html.P("The PD and LGD multipliers allow for additional adjustment of the calculated Probability of Default and Loss Given Default values. The default value of 0.8 for both multipliers provides a more conservative estimate, reducing the PD and LGD by 20%. This can be used to stress test the model or to account for additional factors not directly captured by the economic scenarios."),
         html.H3("Economic Scenario Weighting", className="mb-3"),
         html.P("The model uses user-defined weights for economic scenarios. These weights determine the relative importance of each scenario in the final ECL calculation. The sum of weights should equal 1."),
         html.H3("Economic Sensitivities", className="mb-3"),
@@ -497,8 +497,8 @@ def reset_to_defaults(n_clicks):
     return (
         pool_default_values,
         economic_default_values,
-        1.0,  # Default PD Multiplier
-        1.0,  # Default LGD Multiplier
+        0.8,  # Default PD Multiplier
+        0.8,  # Default LGD Multiplier
         0.4,  # Default Baseline Weight
         0.3,  # Default Adverse Weight
         0.3,  # Default Severely Adverse Weight

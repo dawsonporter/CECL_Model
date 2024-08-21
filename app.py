@@ -52,6 +52,8 @@ class CECLEngine:
         self.economic_factors = pd.DataFrame(DEFAULT_ECONOMIC_DATA).T
         self.asset_pools = DEFAULT_POOL_DATA.copy()
         self.scenario_weights = {"Baseline": 0.4, "Adverse": 0.3, "Severely Adverse": 0.3}
+        self.pd_multiplier = 1.0
+        self.lgd_multiplier = 1.0
 
     def calculate_expected_loss(self, pool_id, scenario, year):
         pool_data = self.asset_pools[pool_id]
@@ -69,9 +71,9 @@ class CECLEngine:
                 impact = sensitivity * (economic_data[factor] - DEFAULT_ECONOMIC_DATA['Baseline'][factor]) / 100
             economic_impact += impact
 
-        # Adjust PD and LGD based on economic impact
-        pd_adjusted = min(1, max(0, pool_data['default-prob'] / 100 * (1 + economic_impact)))
-        lgd_adjusted = min(1, max(0, pool_data['lgd'] / 100 * (1 + economic_impact * 0.5)))
+        # Adjust PD and LGD based on economic impact and multipliers
+        pd_adjusted = min(1, max(0, pool_data['default-prob'] / 100 * (1 + economic_impact) * self.pd_multiplier))
+        lgd_adjusted = min(1, max(0, pool_data['lgd'] / 100 * (1 + economic_impact * 0.5) * self.lgd_multiplier))
         
         # Calculate remaining balance considering prepayments
         remaining_balance = pool_data['balance'] * (1 - pool_data['prepayment-rate'] / 100) ** year
@@ -123,6 +125,35 @@ def create_economic_inputs(scenario):
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control text-center"), width=2),
     ], className="mb-2 align-items-center")
 
+def create_weights_and_multipliers_inputs():
+    return dbc.Card([
+        dbc.CardHeader(html.H4("Weights and Multipliers", className="mb-0")),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col([
+                    html.Div("PD Multiplier", className="fw-bold"),
+                    dbc.Input(id="pd-multiplier", type="number", value=1.0, min=0, max=2, step=0.1, className="form-control text-center")
+                ], width=2),
+                dbc.Col([
+                    html.Div("LGD Multiplier", className="fw-bold"),
+                    dbc.Input(id="lgd-multiplier", type="number", value=1.0, min=0, max=2, step=0.1, className="form-control text-center")
+                ], width=2),
+                dbc.Col([
+                    html.Div("Baseline Weight", className="fw-bold"),
+                    dbc.Input(id="baseline-weight", type="number", value=0.4, min=0, max=1, step=0.1, className="form-control text-center")
+                ], width=2),
+                dbc.Col([
+                    html.Div("Adverse Weight", className="fw-bold"),
+                    dbc.Input(id="adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
+                ], width=2),
+                dbc.Col([
+                    html.Div("Severely Adverse Weight", className="fw-bold"),
+                    dbc.Input(id="severely-adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
+                ], width=2),
+            ], className="mb-2 align-items-end"),
+        ]),
+    ], className="mb-4")
+
 def create_model_explanation():
     return html.Div([
         html.H2("CECL Model Explanation", className="mb-4"),
@@ -146,14 +177,20 @@ def create_model_explanation():
             html.Li("Fed Funds Rate: The target interest rate set by the Federal Reserve, expressed as a percentage."),
             html.Li("Housing Price Index: An index representing the overall level of housing prices.")
         ]),
+        html.H4("Weights and Multipliers:", className="mb-2"),
+        html.Ul([
+            html.Li("PD Multiplier: A factor to adjust the calculated Probability of Default across all pools."),
+            html.Li("LGD Multiplier: A factor to adjust the calculated Loss Given Default across all pools."),
+            html.Li("Economic Scenario Weights: The relative importance given to each economic scenario (Baseline, Adverse, Severely Adverse) in the final ECL calculation.")
+        ]),
         html.H3("Calculation Methodology", className="mb-3"),
         html.P("The CECL calculation involves the following steps:"),
         html.Ol([
-            html.Li("Adjust default probabilities and loss given default based on economic scenarios."),
+            html.Li("Adjust default probabilities and loss given default based on economic scenarios and multipliers."),
             html.Li("Calculate expected loss for each year of the loan's life under each economic scenario."),
             html.Li("Apply the prepayment rate to reduce the outstanding balance each year."),
             html.Li("Discount the expected losses to present value."),
-            html.Li("Weight the losses from different economic scenarios."),
+            html.Li("Weight the losses from different economic scenarios using the specified weights."),
             html.Li("Sum the weighted, discounted expected losses to arrive at the lifetime ECL.")
         ]),
         html.H3("Impact of Economic Factors", className="mb-3"),
@@ -164,8 +201,10 @@ def create_model_explanation():
             html.Li("Fed Funds Rate: Higher rates generally increase risk, leading to higher ECL."),
             html.Li("Housing Price Index (HPI): Higher HPI reduces risk, leading to lower ECL.")
         ]),
+        html.H3("PD and LGD Multipliers", className="mb-3"),
+        html.P("The PD and LGD multipliers allow for additional adjustment of the calculated Probability of Default and Loss Given Default values. This can be used to stress test the model or to account for additional factors not directly captured by the economic scenarios."),
         html.H3("Economic Scenario Weighting", className="mb-3"),
-        html.P(f"The model uses the following weights for economic scenarios: Baseline ({calc_engine.scenario_weights['Baseline']}), Adverse ({calc_engine.scenario_weights['Adverse']}), Severely Adverse ({calc_engine.scenario_weights['Severely Adverse']})."),
+        html.P("The model uses user-defined weights for economic scenarios. These weights determine the relative importance of each scenario in the final ECL calculation. The sum of weights should equal 1."),
         html.H3("Economic Sensitivities", className="mb-3"),
         html.P("Different loan pools have different sensitivities to economic factors. The model uses the following sensitivity multipliers:"),
         html.Div([
@@ -242,6 +281,7 @@ def render_tab_content(active_tab):
                     html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
                 ]),
             ], className="mb-4"),
+            create_weights_and_multipliers_inputs(),
             dbc.Row([
                 dbc.Col(dbc.Button("Calculate", id="calculate-button", color="primary", className="me-2"), width="auto"),
                 dbc.Col(dbc.Button("Reset to Defaults", id="reset-button", color="secondary"), width="auto"),
@@ -256,8 +296,13 @@ def render_tab_content(active_tab):
     Input("calculate-button", "n_clicks"),
     State({"type": "pool-input", "id": ALL}, "value"),
     State({"type": "economic-input", "id": ALL}, "value"),
+    State("pd-multiplier", "value"),
+    State("lgd-multiplier", "value"),
+    State("baseline-weight", "value"),
+    State("adverse-weight", "value"),
+    State("severely-adverse-weight", "value"),
 )
-def update_results(n_clicks, pool_inputs, economic_inputs):
+def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_multiplier, baseline_weight, adverse_weight, severely_adverse_weight):
     if n_clicks is None:
         raise dash.exceptions.PreventUpdate
 
@@ -281,6 +326,19 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
             'fed-funds-rate': float(economic_inputs[i*4 + 2]),
             'housing-price-index': float(economic_inputs[i*4 + 3])
         }
+
+    # Update weights and multipliers
+    calc_engine.pd_multiplier = float(pd_multiplier)
+    calc_engine.lgd_multiplier = float(lgd_multiplier)
+    calc_engine.scenario_weights = {
+        "Baseline": float(baseline_weight),
+        "Adverse": float(adverse_weight),
+        "Severely Adverse": float(severely_adverse_weight)
+    }
+
+    # Normalize weights
+    weight_sum = sum(calc_engine.scenario_weights.values())
+    calc_engine.scenario_weights = {k: v / weight_sum for k, v in calc_engine.scenario_weights.items()}
 
     # Calculate ECL for each pool
     ecl_data = [(pool_id, ALL_POOLS[pool_id], calc_engine.calculate_lifetime_ecl(pool_id)) for pool_id in ALL_POOLS]
@@ -371,15 +429,39 @@ def update_results(n_clicks, pool_inputs, economic_inputs):
         ])
     ])
 
+    weights_and_multipliers_summary = dbc.Card([
+        dbc.CardHeader(html.H4("Weights and Multipliers Summary", className="mb-0")),
+        dbc.CardBody([
+            dbc.Table([
+                html.Thead([
+                    html.Tr([html.Th("Parameter"), html.Th("Value")])
+                ]),
+                html.Tbody([
+                    html.Tr([html.Td("PD Multiplier"), html.Td(f"{calc_engine.pd_multiplier:.2f}")]),
+                    html.Tr([html.Td("LGD Multiplier"), html.Td(f"{calc_engine.lgd_multiplier:.2f}")]),
+                    html.Tr([html.Td("Baseline Weight"), html.Td(f"{calc_engine.scenario_weights['Baseline']:.2f}")]),
+                    html.Tr([html.Td("Adverse Weight"), html.Td(f"{calc_engine.scenario_weights['Adverse']:.2f}")]),
+                    html.Tr([html.Td("Severely Adverse Weight"), html.Td(f"{calc_engine.scenario_weights['Severely Adverse']:.2f}")]),
+                ])
+            ], bordered=True, hover=True, striped=True)
+        ])
+    ], className="mt-4")
+
     return dbc.Row([
         dbc.Col(ecl_by_pool_chart, md=6),
         dbc.Col(ecl_by_scenario_chart, md=6),
-        dbc.Col(ecl_summary, md=12, className="mt-4")
+        dbc.Col(ecl_summary, md=12, className="mt-4"),
+        dbc.Col(weights_and_multipliers_summary, md=12)
     ])
 
 @app.callback(
     [Output({"type": "pool-input", "id": ALL}, "value"),
-     Output({"type": "economic-input", "id": ALL}, "value")],
+     Output({"type": "economic-input", "id": ALL}, "value"),
+     Output("pd-multiplier", "value"),
+     Output("lgd-multiplier", "value"),
+     Output("baseline-weight", "value"),
+     Output("adverse-weight", "value"),
+     Output("severely-adverse-weight", "value")],
     Input("reset-button", "n_clicks"),
     prevent_initial_call=True
 )
@@ -412,7 +494,15 @@ def reset_to_defaults(n_clicks):
         ]
     ]
 
-    return pool_default_values, economic_default_values
+    return (
+        pool_default_values,
+        economic_default_values,
+        1.0,  # Default PD Multiplier
+        1.0,  # Default LGD Multiplier
+        0.4,  # Default Baseline Weight
+        0.3,  # Default Adverse Weight
+        0.3,  # Default Severely Adverse Weight
+    )
 
 if __name__ == '__main__':
     app.run_server(debug=True)

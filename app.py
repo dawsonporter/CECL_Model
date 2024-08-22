@@ -114,7 +114,7 @@ def create_input_group(pool_id, pool_name):
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], step=0.1, className="form-control text-center"), width=6, md=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control text-center"), width=6, md=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control text-center"), width=6, md=1),
-    ], className="mb-2 align-items-center g-2")
+    ], className="mb-1 align-items-center g-1")
 
 def create_economic_inputs(scenario):
     return dbc.Row([
@@ -123,7 +123,7 @@ def create_economic_inputs(scenario):
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control text-center"), width=6, md=2),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control text-center"), width=6, md=2),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control text-center"), width=6, md=2),
-    ], className="mb-2 align-items-center g-2")
+    ], className="mb-1 align-items-center g-1")
 
 def create_weights_and_multipliers_inputs():
     return dbc.Card([
@@ -150,9 +150,9 @@ def create_weights_and_multipliers_inputs():
                     html.Div("Severely Adverse Weight", className="fw-bold text-center"),
                     dbc.Input(id="severely-adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
                 ], width=12, md=2),
-            ], className="g-2 align-items-end"),
+            ], className="g-1 align-items-end"),
         ]),
-    ], className="mb-4")
+    ], className="mb-3")
 
 def create_model_explanation():
     return html.Div([
@@ -210,32 +210,32 @@ def create_model_explanation():
         html.Div([
             dbc.Table([
                 html.Thead([
-                    html.Tr([html.Th("Factor")] + [html.Th(pool_type) for pool_type in ECONOMIC_SENSITIVITIES.keys()])
+                    html.Tr([html.Th("Factor", className="text-center")] + [html.Th(pool_type, className="text-center") for pool_type in ECONOMIC_SENSITIVITIES.keys()])
                 ]),
                 html.Tbody([
-                    html.Tr([html.Td(factor)] + [html.Td(f"{ECONOMIC_SENSITIVITIES[pool_type][factor]:.2f}") for pool_type in ECONOMIC_SENSITIVITIES.keys()])
+                    html.Tr([html.Td(factor, className="text-center")] + [html.Td(f"{ECONOMIC_SENSITIVITIES[pool_type][factor]:.2f}", className="text-center") for pool_type in ECONOMIC_SENSITIVITIES.keys()])
                     for factor in ECONOMIC_SENSITIVITIES["Commercial"].keys()
                 ])
             ], bordered=True, hover=True, striped=True, className="mt-3")
-        ]),
+        ], className="d-flex justify-content-center"),
         html.H3("Typical Input Ranges", className="mb-3"),
         html.P("The following table provides typical ranges for input parameters across different loan pools:"),
         html.Div([
             dbc.Table([
                 html.Thead([
-                    html.Tr([html.Th("Pool Type"), html.Th("PD Range (%)"), html.Th("LGD Range (%)"), html.Th("Average Life (Years)"), html.Th("Discount Rate (%)"), html.Th("Undrawn (%)"), html.Th("Prepayment (%)")])
+                    html.Tr([html.Th(col, className="text-center") for col in ["Pool Type", "PD Range (%)", "LGD Range (%)", "Average Life (Years)", "Discount Rate (%)", "Undrawn (%)", "Prepayment (%)"]])
                 ]),
                 html.Tbody([
-                    html.Tr([html.Td("CRE"), html.Td("1.0 - 3.0"), html.Td("20 - 45"), html.Td("5 - 10"), html.Td("4 - 6"), html.Td("5 - 20"), html.Td("2 - 10")]),
-                    html.Tr([html.Td("C&I"), html.Td("0.5 - 4.0"), html.Td("30 - 60"), html.Td("3 - 7"), html.Td("4 - 7"), html.Td("20 - 40"), html.Td("5 - 15")]),
-                    html.Tr([html.Td("Small Business"), html.Td("2.0 - 6.0"), html.Td("40 - 70"), html.Td("2 - 5"), html.Td("5 - 8"), html.Td("10 - 30"), html.Td("5 - 20")]),
-                    html.Tr([html.Td("Residential Mortgages"), html.Td("0.2 - 1.0"), html.Td("10 - 30"), html.Td("15 - 30"), html.Td("3 - 5"), html.Td("0 - 5"), html.Td("5 - 15")]),
-                    html.Tr([html.Td("Auto Loans"), html.Td("1.0 - 3.0"), html.Td("30 - 60"), html.Td("3 - 7"), html.Td("4 - 8"), html.Td("0 - 5"), html.Td("10 - 25")]),
-                    html.Tr([html.Td("Credit Cards"), html.Td("3.0 - 8.0"), html.Td("60 - 80"), html.Td("1 - 3"), html.Td("8 - 15"), html.Td("40 - 70"), html.Td("15 - 30")]),
-                    html.Tr([html.Td("Personal Loans"), html.Td("2.0 - 6.0"), html.Td("50 - 70"), html.Td("2 - 5"), html.Td("6 - 12"), html.Td("0 - 10"), html.Td("10 - 20")])
+                    html.Tr([html.Td("CRE", className="text-center"), html.Td("1.0 - 3.0", className="text-center"), html.Td("20 - 45", className="text-center"), html.Td("5 - 10", className="text-center"), html.Td("4 - 6", className="text-center"), html.Td("5 - 20", className="text-center"), html.Td("2 - 10", className="text-center")]),
+                    html.Tr([html.Td("C&I", className="text-center"), html.Td("0.5 - 4.0", className="text-center"), html.Td("30 - 60", className="text-center"), html.Td("3 - 7", className="text-center"), html.Td("4 - 7", className="text-center"), html.Td("20 - 40", className="text-center"), html.Td("5 - 15", className="text-center")]),
+                    html.Tr([html.Td("Small Business", className="text-center"), html.Td("2.0 - 6.0", className="text-center"), html.Td("40 - 70", className="text-center"), html.Td("2 - 5", className="text-center"), html.Td("5 - 8", className="text-center"), html.Td("10 - 30", className="text-center"), html.Td("5 - 20", className="text-center")]),
+                    html.Tr([html.Td("Residential Mortgages", className="text-center"), html.Td("0.2 - 1.0", className="text-center"), html.Td("10 - 30", className="text-center"), html.Td("15 - 30", className="text-center"), html.Td("3 - 5", className="text-center"), html.Td("0 - 5", className="text-center"), html.Td("5 - 15", className="text-center")]),
+                    html.Tr([html.Td("Auto Loans", className="text-center"), html.Td("1.0 - 3.0", className="text-center"), html.Td("30 - 60", className="text-center"), html.Td("3 - 7", className="text-center"), html.Td("4 - 8", className="text-center"), html.Td("0 - 5", className="text-center"), html.Td("10 - 25", className="text-center")]),
+                    html.Tr([html.Td("Credit Cards", className="text-center"), html.Td("3.0 - 8.0", className="text-center"), html.Td("60 - 80", className="text-center"), html.Td("1 - 3", className="text-center"), html.Td("8 - 15", className="text-center"), html.Td("40 - 70", className="text-center"), html.Td("15 - 30", className="text-center")]),
+                    html.Tr([html.Td("Personal Loans", className="text-center"), html.Td("2.0 - 6.0", className="text-center"), html.Td("50 - 70", className="text-center"), html.Td("2 - 5", className="text-center"), html.Td("6 - 12", className="text-center"), html.Td("0 - 10", className="text-center"), html.Td("10 - 20", className="text-center")])
                 ])
             ], bordered=True, hover=True, striped=True, className="mt-3")
-        ])
+        ], className="d-flex justify-content-center")
     ])
 
 app.layout = dbc.Container([
@@ -263,11 +263,11 @@ def render_tab_content(active_tab):
                         dbc.Col(html.Div(["Discount", html.Br(), "Rate (%)"], className="fw-bold text-center"), width=6, md=1),
                         dbc.Col(html.Div(["Undrawn", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
                         dbc.Col(html.Div(["Prepayment", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
-                    ], className="mb-2 g-2"),
+                    ], className="mb-2 g-1"),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
                 ]),
-            ], className="mb-4"),
+            ], className="mb-3"),
             dbc.Card([
                 dbc.CardHeader(html.H4("Economic Scenarios", className="mb-0 text-center")),
                 dbc.CardBody([
@@ -277,15 +277,15 @@ def render_tab_content(active_tab):
                         dbc.Col(html.Div(["Unemployment", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=2),
                         dbc.Col(html.Div(["Fed Funds", html.Br(), "Rate (%)"], className="fw-bold text-center"), width=6, md=2),
                         dbc.Col(html.Div(["Housing Price", html.Br(), "Index"], className="fw-bold text-center"), width=6, md=2),
-                    ], className="mb-2 g-2"),
+                    ], className="mb-2 g-1"),
                     html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
                 ]),
-            ], className="mb-4"),
+            ], className="mb-3"),
             create_weights_and_multipliers_inputs(),
             dbc.Row([
                 dbc.Col(dbc.Button("Calculate", id="calculate-button", color="primary", className="me-2"), width="auto"),
                 dbc.Col(dbc.Button("Reset to Defaults", id="reset-button", color="secondary"), width="auto"),
-            ], className="mb-4"),
+            ], className="mb-3"),
             html.Div(id="results-content"),
         ])
     elif active_tab == "model-explanation":
@@ -373,84 +373,86 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
     summary_table = dbc.Table([
         html.Thead([
             html.Tr([
-                html.Th("Category"),
-                html.Th("Total Balance ($M)"),
-                html.Th("ECL ($M)"),
-                html.Th("ECL Coverage (%)")
+                html.Th("Category", className="text-center"),
+                html.Th("Total Balance ($M)", className="text-center"),
+                html.Th("ECL ($M)", className="text-center"),
+                html.Th("ECL Coverage (%)", className="text-center")
             ])
         ]),
         html.Tbody([
             html.Tr([
-                html.Td("Commercial"),
-                html.Td(f"{sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in COMMERCIAL_POOLS):,.2f}"),
-                html.Td(f"{commercial_ecl:,.2f}"),
-                html.Td(f"{commercial_ecl / sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in COMMERCIAL_POOLS) * 100:.2f}%")
+                html.Td("Commercial", className="text-center"),
+                html.Td(f"{sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in COMMERCIAL_POOLS):,.2f}", className="text-center"),
+                html.Td(f"{commercial_ecl:,.2f}", className="text-center"),
+                html.Td(f"{commercial_ecl / sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in COMMERCIAL_POOLS) * 100:.2f}%", className="text-center")
             ]),
             html.Tr([
-                html.Td("Consumer"),
-                html.Td(f"{sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in CONSUMER_POOLS):,.2f}"),
-                html.Td(f"{consumer_ecl:,.2f}"),
-                html.Td(f"{consumer_ecl / sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in CONSUMER_POOLS) * 100:.2f}%")
+                html.Td("Consumer", className="text-center"),
+                html.Td(f"{sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in CONSUMER_POOLS):,.2f}", className="text-center"),
+                html.Td(f"{consumer_ecl:,.2f}", className="text-center"),
+                html.Td(f"{consumer_ecl / sum(calc_engine.asset_pools[pool_id]['balance'] for pool_id in CONSUMER_POOLS) * 100:.2f}%", className="text-center")
             ]),
             html.Tr([
-                html.Td("Total", className="fw-bold"),
-                html.Td(f"{total_balance:,.2f}", className="fw-bold"),
-                html.Td(f"{total_reserve:,.2f}", className="fw-bold"),
-                html.Td(f"{total_reserve / total_balance * 100:.2f}%", className="fw-bold")
+                html.Td("Total", className="fw-bold text-center"),
+                html.Td(f"{total_balance:,.2f}", className="fw-bold text-center"),
+                html.Td(f"{total_reserve:,.2f}", className="fw-bold text-center"),
+                html.Td(f"{total_reserve / total_balance * 100:.2f}%", className="fw-bold text-center")
             ])
         ])
-    ], bordered=True, hover=True, striped=True, className="mt-4")
+    ], bordered=True, hover=True, striped=True, className="mt-3")
 
     # Top 5 pools by ECL
     top_5_ecl = ecl_data[:5]
     top_5_table = dbc.Table([
         html.Thead([
             html.Tr([
-                html.Th("Pool"),
-                html.Th("ECL ($M)"),
-                html.Th("% of Total ECL")
+                html.Th("Pool", className="text-center"),
+                html.Th("ECL ($M)", className="text-center"),
+                html.Th("% of Total ECL", className="text-center")
             ])
         ]),
         html.Tbody([
             html.Tr([
-                html.Td(name),
-                html.Td(f"{ecl:,.2f}"),
-                html.Td(f"{ecl / total_reserve * 100:.2f}%")
+                html.Td(name, className="text-center"),
+                html.Td(f"{ecl:,.2f}", className="text-center"),
+                html.Td(f"{ecl / total_reserve * 100:.2f}%", className="text-center")
             ]) for _, name, ecl in top_5_ecl
         ])
-    ], bordered=True, hover=True, striped=True, className="mt-4")
+    ], bordered=True, hover=True, striped=True, className="mt-3")
 
     ecl_summary = dbc.Card([
         dbc.CardHeader(html.H4("ECL Summary", className="mb-0 text-center")),
         dbc.CardBody([
-            summary_table,
-            html.H5("Top 5 Pools by ECL", className="mt-4 text-center"),
-            top_5_table
+            html.Div([summary_table], className="d-flex justify-content-center"),
+            html.H5("Top 5 Pools by ECL", className="mt-3 text-center"),
+            html.Div([top_5_table], className="d-flex justify-content-center")
         ])
-    ])
+    ], className="mb-3")
 
     weights_and_multipliers_summary = dbc.Card([
         dbc.CardHeader(html.H4("Weights and Multipliers Summary", className="mb-0 text-center")),
         dbc.CardBody([
-            dbc.Table([
-                html.Thead([
-                    html.Tr([html.Th("Parameter"), html.Th("Value")])
-                ]),
-                html.Tbody([
-                    html.Tr([html.Td("PD Multiplier"), html.Td(f"{calc_engine.pd_multiplier:.2f}")]),
-                    html.Tr([html.Td("LGD Multiplier"), html.Td(f"{calc_engine.lgd_multiplier:.2f}")]),
-                    html.Tr([html.Td("Baseline Weight"), html.Td(f"{calc_engine.scenario_weights['Baseline']:.2f}")]),
-                    html.Tr([html.Td("Adverse Weight"), html.Td(f"{calc_engine.scenario_weights['Adverse']:.2f}")]),
-                    html.Tr([html.Td("Severely Adverse Weight"), html.Td(f"{calc_engine.scenario_weights['Severely Adverse']:.2f}")]),
-                ])
-            ], bordered=True, hover=True, striped=True)
+            html.Div([
+                dbc.Table([
+                    html.Thead([
+                        html.Tr([html.Th("Parameter", className="text-center"), html.Th("Value", className="text-center")])
+                    ]),
+                    html.Tbody([
+                        html.Tr([html.Td("PD Multiplier", className="text-center"), html.Td(f"{calc_engine.pd_multiplier:.2f}", className="text-center")]),
+                        html.Tr([html.Td("LGD Multiplier", className="text-center"), html.Td(f"{calc_engine.lgd_multiplier:.2f}", className="text-center")]),
+                        html.Tr([html.Td("Baseline Weight", className="text-center"), html.Td(f"{calc_engine.scenario_weights['Baseline']:.2f}", className="text-center")]),
+                        html.Tr([html.Td("Adverse Weight", className="text-center"), html.Td(f"{calc_engine.scenario_weights['Adverse']:.2f}", className="text-center")]),
+                        html.Tr([html.Td("Severely Adverse Weight", className="text-center"), html.Td(f"{calc_engine.scenario_weights['Severely Adverse']:.2f}", className="text-center")]),
+                    ])
+                ], bordered=True, hover=True, striped=True)
+            ], className="d-flex justify-content-center")
         ])
-    ], className="mt-4")
+    ], className="mb-3")
 
     return dbc.Row([
         dbc.Col(ecl_by_pool_chart, md=6),
         dbc.Col(ecl_by_scenario_chart, md=6),
-        dbc.Col(ecl_summary, md=12, className="mt-4"),
+        dbc.Col(ecl_summary, md=12),
         dbc.Col(weights_and_multipliers_summary, md=12)
     ])
 

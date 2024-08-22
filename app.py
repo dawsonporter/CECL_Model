@@ -245,7 +245,7 @@ app.layout = dbc.Container([
         dbc.Tab(label="Model Explanation", tab_id="model-explanation")
     ], id="tabs", active_tab="model"),
     html.Div(id="tab-content", className="mt-4"),
-], fluid=True)
+], fluid=True, className="px-4")
 
 @app.callback(Output("tab-content", "children"), Input("tabs", "active_tab"))
 def render_tab_content(active_tab):
@@ -353,7 +353,13 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
     ecl_by_pool_chart = dcc.Graph(
         figure={
             'data': [go.Bar(x=[name for _, name, _ in ecl_data], y=[ecl for _, _, ecl in ecl_data])],
-            'layout': go.Layout(title="Lifetime ECL by Pool", xaxis={'title': 'Pool'}, yaxis={'title': 'ECL ($M)'})
+            'layout': go.Layout(
+                title="Lifetime ECL by Pool",
+                xaxis={'title': 'Pool'},
+                yaxis={'title': 'ECL ($M)'},
+                height=400,
+                margin=dict(l=50, r=50, t=50, b=50)
+            )
         }
     )
 
@@ -365,7 +371,14 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
     ecl_by_scenario_chart = dcc.Graph(
         figure={
             'data': [go.Bar(name=scenario, x=list(ALL_POOLS.values()), y=ecls) for scenario, ecls in scenario_data.items()],
-            'layout': go.Layout(title="ECL by Scenario and Pool", xaxis={'title': 'Pool'}, yaxis={'title': 'ECL ($M)'}, barmode='group')
+            'layout': go.Layout(
+                title="ECL by Scenario and Pool",
+                xaxis={'title': 'Pool'},
+                yaxis={'title': 'ECL ($M)'},
+                barmode='group',
+                height=400,
+                margin=dict(l=50, r=50, t=50, b=50)
+            )
         }
     )
 
@@ -454,12 +467,15 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
     ], className="mb-3")
 
     return html.Div([
-        dbc.Row([
-            dbc.Col(ecl_by_pool_chart, md=12),
-            dbc.Col(ecl_by_scenario_chart, md=12),
-        ]),
         dbc.Row(
-            dbc.Col([ecl_summary, weights_and_multipliers_summary], width=12, lg=10, className="mx-auto")
+            dbc.Col([
+                dbc.Row([
+                    dbc.Col(ecl_by_pool_chart, md=6),
+                    dbc.Col(ecl_by_scenario_chart, md=6),
+                ], className="mb-3"),
+                ecl_summary,
+                weights_and_multipliers_summary
+            ], width=12, lg=10, className="mx-auto")
         )
     ])
 

@@ -106,15 +106,15 @@ calc_engine = CECLEngine()
 
 def create_input_group(pool_id, pool_name):
     return dbc.Row([
-        dbc.Col(html.Div(pool_name, className="fw-bold text-center"), width=2),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['balance'], className="form-control text-center"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob'], step=0.1, className="form-control text-center"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd'], step=0.1, className="form-control text-center"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-original-term"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['original-term'], className="form-control text-center"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], step=0.1, className="form-control text-center"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control text-center"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control text-center"), width=1),
-    ], className="mb-2 align-items-center")
+        dbc.Col(html.Div(pool_name, className="fw-bold text-center"), width=12, md=3),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['balance'], className="form-control text-center"), width=6, md=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob'], step=0.1, className="form-control text-center"), width=6, md=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd'], step=0.1, className="form-control text-center"), width=6, md=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-original-term"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['original-term'], className="form-control text-center"), width=6, md=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], step=0.1, className="form-control text-center"), width=6, md=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control text-center"), width=6, md=1),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control text-center"), width=6, md=1),
+    ], className="mb-2 align-items-center g-2")
 
 def create_economic_inputs(scenario):
     return dbc.Row([
@@ -123,7 +123,7 @@ def create_economic_inputs(scenario):
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control text-center"), width=6, md=2),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control text-center"), width=6, md=2),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control text-center"), width=6, md=2),
-    ], className="mb-2 align-items-center")
+    ], className="mb-2 align-items-center g-2")
 
 def create_weights_and_multipliers_inputs():
     return dbc.Card([
@@ -150,7 +150,7 @@ def create_weights_and_multipliers_inputs():
                     html.Div("Severely Adverse Weight", className="fw-bold text-center"),
                     dbc.Input(id="severely-adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
                 ], width=12, md=2),
-            ], className="mb-2 align-items-end"),
+            ], className="g-2 align-items-end"),
         ]),
     ], className="mb-4")
 
@@ -245,7 +245,7 @@ app.layout = dbc.Container([
         dbc.Tab(label="Model Explanation", tab_id="model-explanation")
     ], id="tabs", active_tab="model"),
     html.Div(id="tab-content", className="mt-4"),
-])
+], fluid=True)
 
 @app.callback(Output("tab-content", "children"), Input("tabs", "active_tab"))
 def render_tab_content(active_tab):
@@ -255,15 +255,15 @@ def render_tab_content(active_tab):
                 dbc.CardHeader(html.H4("Loan Pools", className="mb-0 text-center")),
                 dbc.CardBody([
                     dbc.Row([
-                        dbc.Col(html.Div(["Pool Name", html.Br(), ""], className="fw-bold text-center"), width=2),
-                        dbc.Col(html.Div(["Balance", html.Br(), "($M)"], className="fw-bold text-center"), width=1),
-                        dbc.Col(html.Div(["PD", html.Br(), "(%)"], className="fw-bold text-center"), width=1),
-                        dbc.Col(html.Div(["LGD", html.Br(), "(%)"], className="fw-bold text-center"), width=1),
-                        dbc.Col(html.Div(["Term", html.Br(), "(Years)"], className="fw-bold text-center"), width=1),
-                        dbc.Col(html.Div(["Discount", html.Br(), "Rate (%)"], className="fw-bold text-center"), width=1),
-                        dbc.Col(html.Div(["Undrawn", html.Br(), "(%)"], className="fw-bold text-center"), width=1),
-                        dbc.Col(html.Div(["Prepayment", html.Br(), "(%)"], className="fw-bold text-center"), width=1),
-                    ], className="mb-2"),
+                        dbc.Col(html.Div(["Pool Name", html.Br(), ""], className="fw-bold text-center"), width=12, md=3),
+                        dbc.Col(html.Div(["Balance", html.Br(), "($M)"], className="fw-bold text-center"), width=6, md=1),
+                        dbc.Col(html.Div(["PD", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
+                        dbc.Col(html.Div(["LGD", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
+                        dbc.Col(html.Div(["Term", html.Br(), "(Years)"], className="fw-bold text-center"), width=6, md=1),
+                        dbc.Col(html.Div(["Discount", html.Br(), "Rate (%)"], className="fw-bold text-center"), width=6, md=1),
+                        dbc.Col(html.Div(["Undrawn", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
+                        dbc.Col(html.Div(["Prepayment", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
+                    ], className="mb-2 g-2"),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
                 ]),
@@ -277,7 +277,7 @@ def render_tab_content(active_tab):
                         dbc.Col(html.Div(["Unemployment", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=2),
                         dbc.Col(html.Div(["Fed Funds", html.Br(), "Rate (%)"], className="fw-bold text-center"), width=6, md=2),
                         dbc.Col(html.Div(["Housing Price", html.Br(), "Index"], className="fw-bold text-center"), width=6, md=2),
-                    ], className="mb-2"),
+                    ], className="mb-2 g-2"),
                     html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
                 ]),
             ], className="mb-4"),

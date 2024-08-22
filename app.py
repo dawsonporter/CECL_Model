@@ -251,41 +251,45 @@ app.layout = dbc.Container([
 def render_tab_content(active_tab):
     if active_tab == "model":
         return html.Div([
-            dbc.Card([
-                dbc.CardHeader(html.H4("Loan Pools", className="mb-0 text-center")),
-                dbc.CardBody([
+            dbc.Row(
+                dbc.Col([
+                    dbc.Card([
+                        dbc.CardHeader(html.H4("Loan Pools", className="mb-0 text-center")),
+                        dbc.CardBody([
+                            dbc.Row([
+                                dbc.Col(html.Div(["Pool Name", html.Br(), ""], className="fw-bold text-center"), width=12, md=3),
+                                dbc.Col(html.Div(["Balance", html.Br(), "($M)"], className="fw-bold text-center"), width=6, md=1),
+                                dbc.Col(html.Div(["PD", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
+                                dbc.Col(html.Div(["LGD", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
+                                dbc.Col(html.Div(["Term", html.Br(), "(Years)"], className="fw-bold text-center"), width=6, md=1),
+                                dbc.Col(html.Div(["Discount", html.Br(), "Rate (%)"], className="fw-bold text-center"), width=6, md=1),
+                                dbc.Col(html.Div(["Undrawn", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
+                                dbc.Col(html.Div(["Prepayment", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
+                            ], className="mb-2 g-1"),
+                            html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
+                            html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
+                        ]),
+                    ], className="mb-3"),
+                    dbc.Card([
+                        dbc.CardHeader(html.H4("Economic Scenarios", className="mb-0 text-center")),
+                        dbc.CardBody([
+                            dbc.Row([
+                                dbc.Col(html.Div(["Scenario", html.Br(), ""], className="fw-bold text-center"), width=12, md=3),
+                                dbc.Col(html.Div(["GDP Growth", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=2),
+                                dbc.Col(html.Div(["Unemployment", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=2),
+                                dbc.Col(html.Div(["Fed Funds", html.Br(), "Rate (%)"], className="fw-bold text-center"), width=6, md=2),
+                                dbc.Col(html.Div(["Housing Price", html.Br(), "Index"], className="fw-bold text-center"), width=6, md=2),
+                            ], className="mb-2 g-1"),
+                            html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
+                        ]),
+                    ], className="mb-3"),
+                    create_weights_and_multipliers_inputs(),
                     dbc.Row([
-                        dbc.Col(html.Div(["Pool Name", html.Br(), ""], className="fw-bold text-center"), width=12, md=3),
-                        dbc.Col(html.Div(["Balance", html.Br(), "($M)"], className="fw-bold text-center"), width=6, md=1),
-                        dbc.Col(html.Div(["PD", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
-                        dbc.Col(html.Div(["LGD", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
-                        dbc.Col(html.Div(["Term", html.Br(), "(Years)"], className="fw-bold text-center"), width=6, md=1),
-                        dbc.Col(html.Div(["Discount", html.Br(), "Rate (%)"], className="fw-bold text-center"), width=6, md=1),
-                        dbc.Col(html.Div(["Undrawn", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
-                        dbc.Col(html.Div(["Prepayment", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=1),
-                    ], className="mb-2 g-1"),
-                    html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
-                    html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
-                ]),
-            ], className="mb-3"),
-            dbc.Card([
-                dbc.CardHeader(html.H4("Economic Scenarios", className="mb-0 text-center")),
-                dbc.CardBody([
-                    dbc.Row([
-                        dbc.Col(html.Div(["Scenario", html.Br(), ""], className="fw-bold text-center"), width=12, md=3),
-                        dbc.Col(html.Div(["GDP Growth", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=2),
-                        dbc.Col(html.Div(["Unemployment", html.Br(), "(%)"], className="fw-bold text-center"), width=6, md=2),
-                        dbc.Col(html.Div(["Fed Funds", html.Br(), "Rate (%)"], className="fw-bold text-center"), width=6, md=2),
-                        dbc.Col(html.Div(["Housing Price", html.Br(), "Index"], className="fw-bold text-center"), width=6, md=2),
-                    ], className="mb-2 g-1"),
-                    html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
-                ]),
-            ], className="mb-3"),
-            create_weights_and_multipliers_inputs(),
-            dbc.Row([
-                dbc.Col(dbc.Button("Calculate", id="calculate-button", color="primary", className="me-2"), width="auto"),
-                dbc.Col(dbc.Button("Reset to Defaults", id="reset-button", color="secondary"), width="auto"),
-            ], className="mb-3"),
+                        dbc.Col(dbc.Button("Calculate", id="calculate-button", color="primary", className="me-2"), width="auto"),
+                        dbc.Col(dbc.Button("Reset to Defaults", id="reset-button", color="secondary"), width="auto"),
+                    ], className="mb-3"),
+                ], width=12, lg=10, className="mx-auto")
+            ),
             html.Div(id="results-content"),
         ])
     elif active_tab == "model-explanation":
@@ -449,11 +453,14 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
         ])
     ], className="mb-3")
 
-    return dbc.Row([
-        dbc.Col(ecl_by_pool_chart, md=6),
-        dbc.Col(ecl_by_scenario_chart, md=6),
-        dbc.Col(ecl_summary, md=12),
-        dbc.Col(weights_and_multipliers_summary, md=12)
+    return html.Div([
+        dbc.Row([
+            dbc.Col(ecl_by_pool_chart, md=12),
+            dbc.Col(ecl_by_scenario_chart, md=12),
+        ]),
+        dbc.Row(
+            dbc.Col([ecl_summary, weights_and_multipliers_summary], width=12, lg=10, className="mx-auto")
+        )
     ])
 
 @app.callback(

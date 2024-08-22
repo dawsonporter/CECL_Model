@@ -357,10 +357,13 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
                 title="Lifetime ECL by Pool",
                 xaxis={'title': 'Pool'},
                 yaxis={'title': 'ECL ($M)'},
-                height=350,
-                margin=dict(l=50, r=50, t=50, b=50)
+                height=400,  # Increased height
+                margin=dict(l=50, r=50, t=50, b=100),  # Increased bottom margin
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
             )
-        }
+        },
+        config={'displayModeBar': False}
     )
 
     scenario_data = {scenario: [] for scenario in ECONOMIC_SCENARIOS}
@@ -376,10 +379,13 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
                 xaxis={'title': 'Pool'},
                 yaxis={'title': 'ECL ($M)'},
                 barmode='group',
-                height=350,
-                margin=dict(l=50, r=50, t=50, b=50)
+                height=400,  # Increased height
+                margin=dict(l=50, r=50, t=50, b=100),  # Increased bottom margin
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
             )
-        }
+        },
+        config={'displayModeBar': False}
     )
 
     # Create a more detailed summary
@@ -450,10 +456,11 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
         dbc.Row([
             dbc.Col(ecl_by_pool_chart, md=6, className="mb-3"),
             dbc.Col(ecl_by_scenario_chart, md=6, className="mb-3"),
-        ], className="mb-4"),  # Added mb-4 class to create more space below the charts
+        ], className="mb-4"),
+        html.Hr(className="my-4"),  # Add a horizontal line for visual separation
         dbc.Row([
             dbc.Col(ecl_summary, width=12)
-        ], className="mt-4")  # Added mt-4 class to create more space above the ECL summary
+        ], className="mt-4")
     ])
 
 @app.callback(

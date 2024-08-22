@@ -52,8 +52,8 @@ class CECLEngine:
         self.economic_factors = pd.DataFrame(DEFAULT_ECONOMIC_DATA).T
         self.asset_pools = DEFAULT_POOL_DATA.copy()
         self.scenario_weights = {"Baseline": 0.4, "Adverse": 0.3, "Severely Adverse": 0.3}
-        self.pd_multiplier = 0.6  # Updated from 0.8 to 0.6
-        self.lgd_multiplier = 0.6  # Updated from 0.8 to 0.6
+        self.pd_multiplier = 0.6
+        self.lgd_multiplier = 0.6
 
     def calculate_expected_loss(self, pool_id, scenario, year):
         pool_data = self.asset_pools[pool_id]
@@ -107,13 +107,13 @@ calc_engine = CECLEngine()
 def create_input_group(pool_id, pool_name):
     return dbc.Row([
         dbc.Col(html.Div(pool_name, className="fw-bold text-center"), width=2),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['balance'], className="form-control text-center"), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['balance'], className="form-control text-center"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob'], step=0.1, className="form-control text-center"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd'], step=0.1, className="form-control text-center"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-original-term"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['original-term'], className="form-control text-center"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], step=0.1, className="form-control text-center"), width=1),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control text-center"), width=1),
-        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control text-center"), width=2),
+        dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control text-center"), width=1),
     ], className="mb-2 align-items-center")
 
 def create_economic_inputs(scenario):
@@ -256,13 +256,13 @@ def render_tab_content(active_tab):
                 dbc.CardBody([
                     dbc.Row([
                         dbc.Col(html.Div(["Pool Name", html.Br(), ""], className="fw-bold text-center"), width=2),
-                        dbc.Col(html.Div(["Balance", html.Br(), "($M)"], className="fw-bold text-center"), width=2),
+                        dbc.Col(html.Div(["Balance", html.Br(), "($M)"], className="fw-bold text-center"), width=1),
                         dbc.Col(html.Div(["PD", html.Br(), "(%)"], className="fw-bold text-center"), width=1),
                         dbc.Col(html.Div(["LGD", html.Br(), "(%)"], className="fw-bold text-center"), width=1),
                         dbc.Col(html.Div(["Term", html.Br(), "(Years)"], className="fw-bold text-center"), width=1),
                         dbc.Col(html.Div(["Discount", html.Br(), "Rate (%)"], className="fw-bold text-center"), width=1),
                         dbc.Col(html.Div(["Undrawn", html.Br(), "(%)"], className="fw-bold text-center"), width=1),
-                        dbc.Col(html.Div(["Prepayment", html.Br(), "(%)"], className="fw-bold text-center"), width=2),
+                        dbc.Col(html.Div(["Prepayment", html.Br(), "(%)"], className="fw-bold text-center"), width=1),
                     ], className="mb-2"),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
@@ -497,8 +497,8 @@ def reset_to_defaults(n_clicks):
     return (
         pool_default_values,
         economic_default_values,
-        0.6,  # Default PD Multiplier (updated from 0.8 to 0.6)
-        0.6,  # Default LGD Multiplier (updated from 0.8 to 0.6)
+        0.6,  # Default PD Multiplier
+        0.6,  # Default LGD Multiplier
         0.4,  # Default Baseline Weight
         0.3,  # Default Adverse Weight
         0.3,  # Default Severely Adverse Weight

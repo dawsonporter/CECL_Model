@@ -450,10 +450,10 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
         dbc.Row([
             dbc.Col(ecl_by_pool_chart, md=6, className="mb-3"),
             dbc.Col(ecl_by_scenario_chart, md=6, className="mb-3"),
-        ]),
+        ], className="mb-4"),  # Added mb-4 class to create more space below the charts
         dbc.Row([
             dbc.Col(ecl_summary, width=12)
-        ])
+        ], className="mt-4")  # Added mt-4 class to create more space above the ECL summary
     ])
 
 @app.callback(

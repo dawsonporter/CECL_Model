@@ -147,8 +147,8 @@ def create_weights_and_multipliers_inputs():
                     dbc.Input(id="adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
                 ], width=12, md=1, className="mb-2 px-1"),
                 dbc.Col([
-                    html.Div("Severely Adverse Weight", className="fw-bold text-center"),
-                    dbc.Input(id="severely-adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
+                    html.Div("Severe Weight", className="fw-bold text-center"),
+                    dbc.Input(id="severe-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
                 ], width=12, md=1, className="mb-2 px-1"),
             ], className="justify-content-center g-0"),
         ], className="py-2 px-0"),
@@ -181,7 +181,7 @@ def create_model_explanation():
         html.Ul([
             html.Li("PD Multiplier: A factor to adjust the calculated Probability of Default across all pools. Default value is 0.6, providing a more conservative estimate."),
             html.Li("LGD Multiplier: A factor to adjust the calculated Loss Given Default across all pools. Default value is 0.6, providing a more conservative estimate."),
-            html.Li("Economic Scenario Weights: The relative importance given to each economic scenario (Baseline, Adverse, Severely Adverse) in the final ECL calculation.")
+            html.Li("Economic Scenario Weights: The relative importance given to each economic scenario (Baseline, Adverse, Severe) in the final ECL calculation.")
         ]),
         html.H3("Calculation Methodology", className="mb-3"),
         html.P("The CECL calculation involves the following steps:"),
@@ -216,7 +216,7 @@ def create_model_explanation():
                     html.Tr([html.Td(factor, className="text-center")] + [html.Td(f"{ECONOMIC_SENSITIVITIES[pool_type][factor]:.2f}", className="text-center") for pool_type in ECONOMIC_SENSITIVITIES.keys()])
                     for factor in ECONOMIC_SENSITIVITIES["Commercial"].keys()
                 ])
-            ], bordered=True, hover=True, striped=True, className="mt-3")
+            ], bordered=True, hover=True, striped=True, className="mt-3 table-sm")
         ], className="d-flex justify-content-center"),
         html.H3("Typical Input Ranges", className="mb-3"),
         html.P("The following table provides typical ranges for input parameters across different loan pools:"),
@@ -234,7 +234,7 @@ def create_model_explanation():
                     html.Tr([html.Td("Credit Cards", className="text-center"), html.Td("3.0 - 8.0", className="text-center"), html.Td("60 - 80", className="text-center"), html.Td("1 - 3", className="text-center"), html.Td("8 - 15", className="text-center"), html.Td("40 - 70", className="text-center"), html.Td("15 - 30", className="text-center")]),
                     html.Tr([html.Td("Personal Loans", className="text-center"), html.Td("2.0 - 6.0", className="text-center"), html.Td("50 - 70", className="text-center"), html.Td("2 - 5", className="text-center"), html.Td("6 - 12", className="text-center"), html.Td("0 - 10", className="text-center"), html.Td("10 - 20", className="text-center")])
                 ])
-            ], bordered=True, hover=True, striped=True, className="mt-3")
+            ], bordered=True, hover=True, striped=True, className="mt-3 table-sm")
         ], className="d-flex justify-content-center")
     ])
 
@@ -249,7 +249,7 @@ app.layout = dbc.Container([
             html.Div(id="tab-content", className="mt-4"),
         ], width=12, lg=10, className="mx-auto")
     )
-], fluid=True, className="px-2")
+], fluid=True, className="px-1")
 
 @app.callback(Output("tab-content", "children"), Input("tabs", "active_tab"))
 def render_tab_content(active_tab):
@@ -289,7 +289,7 @@ def render_tab_content(active_tab):
             dbc.Row([
                 dbc.Col(dbc.Button("Calculate", id="calculate-button", color="primary", className="me-2"), width="auto"),
                 dbc.Col(dbc.Button("Reset to Defaults", id="reset-button", color="secondary"), width="auto"),
-            ], className="mb-3"),
+            ], className="mb-3 justify-content-center"),
             html.Div(id="results-content"),
         ])
     elif active_tab == "model-explanation":
@@ -304,9 +304,9 @@ def render_tab_content(active_tab):
     State("lgd-multiplier", "value"),
     State("baseline-weight", "value"),
     State("adverse-weight", "value"),
-    State("severely-adverse-weight", "value"),
+    State("severe-weight", "value"),
 )
-def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_multiplier, baseline_weight, adverse_weight, severely_adverse_weight):
+def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_multiplier, baseline_weight, adverse_weight, severe_weight):
     if n_clicks is None:
         raise dash.exceptions.PreventUpdate
 
@@ -337,7 +337,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
     calc_engine.scenario_weights = {
         "Baseline": float(baseline_weight),
         "Adverse": float(adverse_weight),
-        "Severely Adverse": float(severely_adverse_weight)
+        "Severely Adverse": float(severe_weight)
     }
 
     # Normalize weights
@@ -472,7 +472,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
      Output("lgd-multiplier", "value"),
      Output("baseline-weight", "value"),
      Output("adverse-weight", "value"),
-     Output("severely-adverse-weight", "value")],
+     Output("severe-weight", "value")],
     Input("reset-button", "n_clicks"),
     prevent_initial_call=True
 )
@@ -512,7 +512,7 @@ def reset_to_defaults(n_clicks):
         0.6,  # Default LGD Multiplier
         0.4,  # Default Baseline Weight
         0.3,  # Default Adverse Weight
-        0.3,  # Default Severely Adverse Weight
+        0.3,  # Default Severe Weight
     )
 
 if __name__ == '__main__':

@@ -119,10 +119,10 @@ def create_input_group(pool_id, pool_name):
 def create_economic_inputs(scenario):
     return dbc.Row([
         dbc.Col(html.Div(scenario, className="fw-bold text-center"), width=12, md=3, className="px-1"),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], step=0.1, className="form-control text-center"), width=6, md=2, className="px-1"),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control text-center"), width=6, md=2, className="px-1"),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control text-center"), width=6, md=2, className="px-1"),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control text-center"), width=6, md=2, className="px-1"),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], step=0.1, className="form-control text-center"), width=6, md=1, className="px-1"),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control text-center"), width=6, md=1, className="px-1"),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control text-center"), width=6, md=1, className="px-1"),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control text-center"), width=6, md=1, className="px-1"),
     ], className="mb-1 align-items-center g-0")
 
 def create_weights_and_multipliers_inputs():
@@ -133,23 +133,23 @@ def create_weights_and_multipliers_inputs():
                 dbc.Col([
                     html.Div("PD Multiplier", className="fw-bold text-center"),
                     dbc.Input(id="pd-multiplier", type="number", value=0.6, min=0, max=2, step=0.1, className="form-control text-center")
-                ], width=12, md=2, className="mb-2 px-1"),
+                ], width=12, md=1, className="mb-2 px-1"),
                 dbc.Col([
                     html.Div("LGD Multiplier", className="fw-bold text-center"),
                     dbc.Input(id="lgd-multiplier", type="number", value=0.6, min=0, max=2, step=0.1, className="form-control text-center")
-                ], width=12, md=2, className="mb-2 px-1"),
+                ], width=12, md=1, className="mb-2 px-1"),
                 dbc.Col([
                     html.Div("Baseline Weight", className="fw-bold text-center"),
                     dbc.Input(id="baseline-weight", type="number", value=0.4, min=0, max=1, step=0.1, className="form-control text-center")
-                ], width=12, md=2, className="mb-2 px-1"),
+                ], width=12, md=1, className="mb-2 px-1"),
                 dbc.Col([
                     html.Div("Adverse Weight", className="fw-bold text-center"),
                     dbc.Input(id="adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
-                ], width=12, md=2, className="mb-2 px-1"),
+                ], width=12, md=1, className="mb-2 px-1"),
                 dbc.Col([
                     html.Div("Severely Adverse Weight", className="fw-bold text-center"),
                     dbc.Input(id="severely-adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
-                ], width=12, md=2, className="mb-2 px-1"),
+                ], width=12, md=1, className="mb-2 px-1"),
             ], className="justify-content-center g-0"),
         ], className="py-2 px-0"),
     ], className="mb-3")
@@ -247,7 +247,7 @@ app.layout = dbc.Container([
                 dbc.Tab(label="Model Explanation", tab_id="model-explanation")
             ], id="tabs", active_tab="model"),
             html.Div(id="tab-content", className="mt-4"),
-        ], width=12, className="mx-auto")
+        ], width=12, lg=10, className="mx-auto")
     )
 ], fluid=True, className="px-2")
 
@@ -277,10 +277,10 @@ def render_tab_content(active_tab):
                 dbc.CardBody([
                     dbc.Row([
                         dbc.Col(html.Div("Scenario", className="fw-bold text-center"), width=12, md=3, className="px-1"),
-                        dbc.Col(html.Div("GDP Growth (%)", className="fw-bold text-center"), width=6, md=2, className="px-1"),
-                        dbc.Col(html.Div("Unemployment (%)", className="fw-bold text-center"), width=6, md=2, className="px-1"),
-                        dbc.Col(html.Div("Fed Funds Rate (%)", className="fw-bold text-center"), width=6, md=2, className="px-1"),
-                        dbc.Col(html.Div("Housing Price Index", className="fw-bold text-center"), width=6, md=2, className="px-1"),
+                        dbc.Col(html.Div("GDP Growth (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
+                        dbc.Col(html.Div("Unemployment (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
+                        dbc.Col(html.Div("Fed Funds Rate (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
+                        dbc.Col(html.Div("Housing Price Index", className="fw-bold text-center"), width=6, md=1, className="px-1"),
                     ], className="mb-2 g-0"),
                     html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
                 ], className="py-2 px-0"),

@@ -36,15 +36,15 @@ DEFAULT_POOL_DATA = {
 }
 
 DEFAULT_ECONOMIC_DATA = {
-    "Baseline": {"gdp-growth": 2.0, "unemployment-rate": 5.0, "fed-funds-rate": 3.00, "housing-price-index": 200},
-    "Adverse": {"gdp-growth": -1.0, "unemployment-rate": 8.0, "fed-funds-rate": 5.00, "housing-price-index": 180},
-    "Severely Adverse": {"gdp-growth": -4.0, "unemployment-rate": 12.0, "fed-funds-rate": 7.00, "housing-price-index": 160},
+    "Baseline": {"gdp-growth": 2.0, "unemployment-rate": 5.0, "fed-funds-rate": 3.00, "housing-index": 200},
+    "Adverse": {"gdp-growth": -1.0, "unemployment-rate": 8.0, "fed-funds-rate": 5.00, "housing-index": 180},
+    "Severely Adverse": {"gdp-growth": -4.0, "unemployment-rate": 12.0, "fed-funds-rate": 7.00, "housing-index": 160},
 }
 
 # Economic sensitivities (impact multipliers)
 ECONOMIC_SENSITIVITIES = {
-    "Commercial": {"gdp-growth": 0.7, "unemployment-rate": 0.8, "fed-funds-rate": 1.5, "housing-price-index": 0.5},
-    "Consumer": {"gdp-growth": 0.8, "unemployment-rate": 1.2, "fed-funds-rate": 1.0, "housing-price-index": 1.5}
+    "Commercial": {"gdp-growth": 0.7, "unemployment-rate": 0.8, "fed-funds-rate": 1.5, "housing-index": 0.5},
+    "Consumer": {"gdp-growth": 0.8, "unemployment-rate": 1.2, "fed-funds-rate": 1.0, "housing-index": 1.5}
 }
 
 class CECLEngine:
@@ -63,7 +63,7 @@ class CECLEngine:
         # Calculate economic impact
         economic_impact = 0
         for factor, sensitivity in ECONOMIC_SENSITIVITIES[pool_type].items():
-            if factor in ['gdp-growth', 'housing-price-index']:
+            if factor in ['gdp-growth', 'housing-index']:
                 # For GDP and HPI, higher values reduce risk
                 impact = -sensitivity * (economic_data[factor] - DEFAULT_ECONOMIC_DATA['Baseline'][factor]) / 100
             else:
@@ -114,7 +114,7 @@ def create_input_group(pool_id, pool_name):
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-discount-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['discount-rate'], step=0.1, className="form-control text-center"), width=6, md=1, className="px-1"),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-undrawn-percentage"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['undrawn-percentage'], className="form-control text-center"), width=6, md=1, className="px-1"),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-prepayment-rate"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['prepayment-rate'], className="form-control text-center"), width=6, md=1, className="px-1"),
-    ], className="mb-1 align-items-center g-0")
+    ], className="mb-1 align-items-center g-0 justify-content-center")
 
 def create_economic_inputs(scenario):
     return dbc.Row([
@@ -122,8 +122,8 @@ def create_economic_inputs(scenario):
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], step=0.1, className="form-control text-center"), width=6, md=1, className="px-1"),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control text-center"), width=6, md=1, className="px-1"),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control text-center"), width=6, md=1, className="px-1"),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control text-center"), width=6, md=1, className="px-1"),
-    ], className="mb-1 align-items-center g-0")
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-index'], className="form-control text-center"), width=6, md=1, className="px-1"),
+    ], className="mb-1 align-items-center g-0 justify-content-center")
 
 def create_weights_and_multipliers_inputs():
     return dbc.Card([
@@ -175,7 +175,7 @@ def create_model_explanation():
             html.Li("GDP Growth: The annual growth rate of Gross Domestic Product, expressed as a percentage."),
             html.Li("Unemployment Rate: The percentage of the labor force that is unemployed."),
             html.Li("Fed Funds Rate: The target interest rate set by the Federal Reserve, expressed as a percentage."),
-            html.Li("Housing Price Index: An index representing the overall level of housing prices.")
+            html.Li("Housing Index: An index representing the overall level of housing prices.")
         ]),
         html.H4("Weights and Multipliers:", className="mb-2"),
         html.Ul([
@@ -199,7 +199,7 @@ def create_model_explanation():
             html.Li("GDP Growth: Higher GDP growth reduces risk, leading to lower ECL."),
             html.Li("Unemployment Rate: Higher unemployment increases risk, leading to higher ECL."),
             html.Li("Fed Funds Rate: Higher rates generally increase risk, leading to higher ECL."),
-            html.Li("Housing Price Index (HPI): Higher HPI reduces risk, leading to lower ECL.")
+            html.Li("Housing Index: Higher index reduces risk, leading to lower ECL.")
         ]),
         html.H3("PD and LGD Multipliers", className="mb-3"),
         html.P("The PD and LGD multipliers allow for additional adjustment of the calculated Probability of Default and Loss Given Default values. The default value of 0.6 for both multipliers provides a more conservative estimate, reducing the PD and LGD by 40%. This can be used to stress test the model or to account for additional factors not directly captured by the economic scenarios."),
@@ -267,7 +267,7 @@ def render_tab_content(active_tab):
                         dbc.Col(html.Div("Discount Rate (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
                         dbc.Col(html.Div("Undrawn (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
                         dbc.Col(html.Div("Prepayment (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
-                    ], className="mb-2 g-0"),
+                    ], className="mb-2 g-0 justify-content-center"),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
                 ], className="py-2 px-0"),
@@ -280,8 +280,8 @@ def render_tab_content(active_tab):
                         dbc.Col(html.Div("GDP Growth (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
                         dbc.Col(html.Div("Unemployment (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
                         dbc.Col(html.Div("Fed Funds Rate (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
-                        dbc.Col(html.Div("Housing Price Index", className="fw-bold text-center"), width=6, md=1, className="px-1"),
-                    ], className="mb-2 g-0"),
+                        dbc.Col(html.Div("Housing Index", className="fw-bold text-center"), width=6, md=1, className="px-1"),
+                    ], className="mb-2 g-0 justify-content-center"),
                     html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
                 ], className="py-2 px-0"),
             ], className="mb-3"),
@@ -328,7 +328,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
             'gdp-growth': float(economic_inputs[i*4]),
             'unemployment-rate': float(economic_inputs[i*4 + 1]),
             'fed-funds-rate': float(economic_inputs[i*4 + 2]),
-            'housing-price-index': float(economic_inputs[i*4 + 3])
+            'housing-index': float(economic_inputs[i*4 + 3])
         }
 
     # Update weights and multipliers
@@ -451,7 +451,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
             dbc.Row([
                 dbc.Col([summary_table], width=12, lg=6, className="mb-3"),
                 dbc.Col([top_5_table], width=12, lg=6, className="mb-3 mt-3 mt-lg-0")
-            ], className="g-0 gx-4")
+            ], className="g-0 gx-4 justify-content-center")
         ], className="py-2")
     ], className="mb-3")
 
@@ -459,10 +459,10 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
         dbc.Row([
             dbc.Col(ecl_by_pool_chart, md=6, className="mb-3"),
             dbc.Col(ecl_by_scenario_chart, md=6, className="mb-3"),
-        ], className="mb-4"),
+        ], className="mb-4 justify-content-center"),
         dbc.Row([
             dbc.Col(ecl_summary, width=12)
-        ], className="mt-4")
+        ], className="mt-4 justify-content-center")
     ])
 
 @app.callback(
@@ -501,7 +501,7 @@ def reset_to_defaults(n_clicks):
             DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'],
             DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'],
             DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'],
-            DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index']
+            DEFAULT_ECONOMIC_DATA[scenario]['housing-index']
         ]
     ]
 

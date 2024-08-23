@@ -150,8 +150,8 @@ def create_weights_and_multipliers_inputs():
                     html.Div("Severely Adverse Weight", className="fw-bold text-center"),
                     dbc.Input(id="severely-adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
                 ], width=12, md=2, className="mb-2"),
-            ], className="justify-content-center"),
-        ], className="py-2"),
+            ], className="justify-content-center g-0"),
+        ], className="py-2 px-0"),
     ], className="mb-3")
 
 def create_model_explanation():
@@ -450,7 +450,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
         dbc.CardBody([
             dbc.Row([
                 dbc.Col([summary_table], width=12, lg=6, className="mb-3"),
-                dbc.Col([top_5_table], width=12, lg=6, className="mb-3")
+                dbc.Col([top_5_table], width=12, lg=6, className="mb-3 mt-3 mt-lg-0")
             ], className="g-0")
         ], className="py-2")
     ], className="mb-3")

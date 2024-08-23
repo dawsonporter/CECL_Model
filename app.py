@@ -119,10 +119,10 @@ def create_input_group(pool_id, pool_name):
 def create_economic_inputs(scenario):
     return dbc.Row([
         dbc.Col(html.Div(scenario, className="fw-bold text-center"), width=12, md=3, className="px-1"),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], step=0.1, className="form-control text-center"), width=6, md=1, className="px-1"),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control text-center"), width=6, md=1, className="px-1"),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control text-center"), width=6, md=1, className="px-1"),
-        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control text-center"), width=6, md=1, className="px-1"),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], step=0.1, className="form-control text-center"), width=6, md=2, className="px-1"),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control text-center"), width=6, md=2, className="px-1"),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control text-center"), width=6, md=2, className="px-1"),
+        dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-housing-price-index"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['housing-price-index'], className="form-control text-center"), width=6, md=2, className="px-1"),
     ], className="mb-1 align-items-center g-0")
 
 def create_weights_and_multipliers_inputs():
@@ -133,23 +133,23 @@ def create_weights_and_multipliers_inputs():
                 dbc.Col([
                     html.Div("PD Multiplier", className="fw-bold text-center"),
                     dbc.Input(id="pd-multiplier", type="number", value=0.6, min=0, max=2, step=0.1, className="form-control text-center")
-                ], width=12, md=1, className="mb-2 px-1"),
+                ], width=12, md=2, className="mb-2 px-1"),
                 dbc.Col([
                     html.Div("LGD Multiplier", className="fw-bold text-center"),
                     dbc.Input(id="lgd-multiplier", type="number", value=0.6, min=0, max=2, step=0.1, className="form-control text-center")
-                ], width=12, md=1, className="mb-2 px-1"),
+                ], width=12, md=2, className="mb-2 px-1"),
                 dbc.Col([
                     html.Div("Baseline Weight", className="fw-bold text-center"),
                     dbc.Input(id="baseline-weight", type="number", value=0.4, min=0, max=1, step=0.1, className="form-control text-center")
-                ], width=12, md=1, className="mb-2 px-1"),
+                ], width=12, md=2, className="mb-2 px-1"),
                 dbc.Col([
                     html.Div("Adverse Weight", className="fw-bold text-center"),
                     dbc.Input(id="adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
-                ], width=12, md=1, className="mb-2 px-1"),
+                ], width=12, md=2, className="mb-2 px-1"),
                 dbc.Col([
-                    html.Div("Severely Adverse Weight", className="fw-bold text-center"),
-                    dbc.Input(id="severely-adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
-                ], width=12, md=1, className="mb-2 px-1"),
+                    html.Div("Severe Weight", className="fw-bold text-center"),
+                    dbc.Input(id="severe-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
+                ], width=12, md=2, className="mb-2 px-1"),
             ], className="justify-content-center g-0"),
         ], className="py-2 px-0"),
     ], className="mb-3")
@@ -181,7 +181,7 @@ def create_model_explanation():
         html.Ul([
             html.Li("PD Multiplier: A factor to adjust the calculated Probability of Default across all pools. Default value is 0.6, providing a more conservative estimate."),
             html.Li("LGD Multiplier: A factor to adjust the calculated Loss Given Default across all pools. Default value is 0.6, providing a more conservative estimate."),
-            html.Li("Economic Scenario Weights: The relative importance given to each economic scenario (Baseline, Adverse, Severely Adverse) in the final ECL calculation.")
+            html.Li("Economic Scenario Weights: The relative importance given to each economic scenario (Baseline, Adverse, Severe) in the final ECL calculation.")
         ]),
         html.H3("Calculation Methodology", className="mb-3"),
         html.P("The CECL calculation involves the following steps:"),
@@ -249,7 +249,7 @@ app.layout = dbc.Container([
             html.Div(id="tab-content", className="mt-4"),
         ], width=12, lg=10, className="mx-auto")
     )
-], fluid=True, className="px-2")
+], fluid=True, className="px-1")
 
 @app.callback(Output("tab-content", "children"), Input("tabs", "active_tab"))
 def render_tab_content(active_tab):
@@ -267,7 +267,7 @@ def render_tab_content(active_tab):
                         dbc.Col(html.Div("Discount Rate (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
                         dbc.Col(html.Div("Undrawn (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
                         dbc.Col(html.Div("Prepayment (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
-                    ], className="mb-2 g-0"),
+                    ], className="mb-2 g-0 justify-content-center"),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
                 ], className="py-2 px-0"),
@@ -277,11 +277,11 @@ def render_tab_content(active_tab):
                 dbc.CardBody([
                     dbc.Row([
                         dbc.Col(html.Div("Scenario", className="fw-bold text-center"), width=12, md=3, className="px-1"),
-                        dbc.Col(html.Div("GDP Growth (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
-                        dbc.Col(html.Div("Unemployment (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
-                        dbc.Col(html.Div("Fed Funds Rate (%)", className="fw-bold text-center"), width=6, md=1, className="px-1"),
-                        dbc.Col(html.Div("Housing Price Index", className="fw-bold text-center"), width=6, md=1, className="px-1"),
-                    ], className="mb-2 g-0"),
+                        dbc.Col(html.Div("GDP Growth (%)", className="fw-bold text-center"), width=6, md=2, className="px-1"),
+                        dbc.Col(html.Div("Unemployment (%)", className="fw-bold text-center"), width=6, md=2, className="px-1"),
+                        dbc.Col(html.Div("Fed Funds Rate (%)", className="fw-bold text-center"), width=6, md=2, className="px-1"),
+                        dbc.Col(html.Div("Housing Price Index", className="fw-bold text-center"), width=6, md=2, className="px-1"),
+                    ], className="mb-2 g-0 justify-content-center"),
                     html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
                 ], className="py-2 px-0"),
             ], className="mb-3"),
@@ -289,7 +289,7 @@ def render_tab_content(active_tab):
             dbc.Row([
                 dbc.Col(dbc.Button("Calculate", id="calculate-button", color="primary", className="me-2"), width="auto"),
                 dbc.Col(dbc.Button("Reset to Defaults", id="reset-button", color="secondary"), width="auto"),
-            ], className="mb-3"),
+            ], className="mb-3 justify-content-center"),
             html.Div(id="results-content"),
         ])
     elif active_tab == "model-explanation":
@@ -304,9 +304,9 @@ def render_tab_content(active_tab):
     State("lgd-multiplier", "value"),
     State("baseline-weight", "value"),
     State("adverse-weight", "value"),
-    State("severely-adverse-weight", "value"),
+    State("severe-weight", "value"),
 )
-def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_multiplier, baseline_weight, adverse_weight, severely_adverse_weight):
+def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_multiplier, baseline_weight, adverse_weight, severe_weight):
     if n_clicks is None:
         raise dash.exceptions.PreventUpdate
 
@@ -337,7 +337,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
     calc_engine.scenario_weights = {
         "Baseline": float(baseline_weight),
         "Adverse": float(adverse_weight),
-        "Severely Adverse": float(severely_adverse_weight)
+        "Severely Adverse": float(severe_weight)
     }
 
     # Normalize weights
@@ -472,7 +472,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
      Output("lgd-multiplier", "value"),
      Output("baseline-weight", "value"),
      Output("adverse-weight", "value"),
-     Output("severely-adverse-weight", "value")],
+     Output("severe-weight", "value")],
     Input("reset-button", "n_clicks"),
     prevent_initial_call=True
 )
@@ -512,7 +512,7 @@ def reset_to_defaults(n_clicks):
         0.6,  # Default LGD Multiplier
         0.4,  # Default Baseline Weight
         0.3,  # Default Adverse Weight
-        0.3,  # Default Severely Adverse Weight
+        0.3,  # Default Severe Weight
     )
 
 if __name__ == '__main__':

@@ -106,7 +106,7 @@ calc_engine = CECLEngine()
 
 def create_input_group(pool_id, pool_name):
     return dbc.Row([
-        dbc.Col(html.Div(pool_name, className="fw-bold"), width=12, md=3, className="px-1"),
+        dbc.Col(html.Div(pool_name, className="fw-bold text-center"), width=12, md=3, className="px-1"),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-balance"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['balance'], className="form-control text-center"), width=6, md=1, className="px-1"),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-default-prob"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['default-prob'], step=0.1, className="form-control text-center"), width=6, md=1, className="px-1"),
         dbc.Col(dbc.Input(id={"type": "pool-input", "id": f"{pool_id}-lgd"}, type="number", value=DEFAULT_POOL_DATA[pool_id]['lgd'], step=0.1, className="form-control text-center"), width=6, md=1, className="px-1"),
@@ -118,7 +118,7 @@ def create_input_group(pool_id, pool_name):
 
 def create_economic_inputs(scenario):
     return dbc.Row([
-        dbc.Col(html.Div(scenario, className="fw-bold"), width=12, md=3, className="px-1"),
+        dbc.Col(html.Div(scenario, className="fw-bold text-center"), width=12, md=3, className="px-1"),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-gdp-growth"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['gdp-growth'], step=0.1, className="form-control text-center"), width=6, md=2, className="px-1"),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-unemployment-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['unemployment-rate'], step=0.1, className="form-control text-center"), width=6, md=2, className="px-1"),
         dbc.Col(dbc.Input(id={"type": "economic-input", "id": f"{scenario}-fed-funds-rate"}, type="number", value=DEFAULT_ECONOMIC_DATA[scenario]['fed-funds-rate'], step=0.01, className="form-control text-center"), width=6, md=2, className="px-1"),
@@ -270,7 +270,7 @@ def render_tab_content(active_tab):
                     ], className="mb-2 g-0"),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in COMMERCIAL_POOLS.items()]),
                     html.Div([create_input_group(pool_id, pool_name) for pool_id, pool_name in CONSUMER_POOLS.items()]),
-                ], className="py-2"),
+                ], className="py-2 px-0"),
             ], className="mb-3"),
             dbc.Card([
                 dbc.CardHeader(html.H5("Economic Scenarios", className="mb-0 text-center")),
@@ -283,7 +283,7 @@ def render_tab_content(active_tab):
                         dbc.Col(html.Div("Housing Price Index", className="fw-bold text-center"), width=6, md=2, className="px-1"),
                     ], className="mb-2 g-0"),
                     html.Div([create_economic_inputs(scenario) for scenario in ECONOMIC_SCENARIOS]),
-                ], className="py-2"),
+                ], className="py-2 px-0"),
             ], className="mb-3"),
             create_weights_and_multipliers_inputs(),
             dbc.Row([
@@ -395,6 +395,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
     
     summary_table = dbc.Table([
         html.Thead([
+            html.Tr([html.Th("ECL Coverage by Commercial and Consumer", colSpan=4, className="text-center")]),
             html.Tr([
                 html.Th("Category", className="text-center"),
                 html.Th("Total Balance ($M)", className="text-center"),
@@ -428,6 +429,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
     top_5_ecl = ecl_data[:5]
     top_5_table = dbc.Table([
         html.Thead([
+            html.Tr([html.Th("Top 5 Pools by ECL", colSpan=3, className="text-center")]),
             html.Tr([
                 html.Th("Pool", className="text-center"),
                 html.Th("ECL ($M)", className="text-center"),
@@ -448,10 +450,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
         dbc.CardBody([
             dbc.Row([
                 dbc.Col([summary_table], width=12, lg=6, className="mb-3"),
-                dbc.Col([
-                    html.H6("Top 5 Pools by ECL", className="mt-3 text-center"),
-                    top_5_table
-                ], width=12, lg=6, className="mb-3")
+                dbc.Col([top_5_table], width=12, lg=6, className="mb-3")
             ], className="g-0")
         ], className="py-2")
     ], className="mb-3")

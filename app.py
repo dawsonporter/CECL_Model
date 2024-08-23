@@ -133,23 +133,23 @@ def create_weights_and_multipliers_inputs():
                 dbc.Col([
                     html.Div("PD Multiplier", className="fw-bold text-center"),
                     dbc.Input(id="pd-multiplier", type="number", value=0.6, min=0, max=2, step=0.1, className="form-control text-center")
-                ], width=12, md=2, className="mb-2"),
+                ], width=12, md=2, className="mb-2 px-1"),
                 dbc.Col([
                     html.Div("LGD Multiplier", className="fw-bold text-center"),
                     dbc.Input(id="lgd-multiplier", type="number", value=0.6, min=0, max=2, step=0.1, className="form-control text-center")
-                ], width=12, md=2, className="mb-2"),
+                ], width=12, md=2, className="mb-2 px-1"),
                 dbc.Col([
                     html.Div("Baseline Weight", className="fw-bold text-center"),
                     dbc.Input(id="baseline-weight", type="number", value=0.4, min=0, max=1, step=0.1, className="form-control text-center")
-                ], width=12, md=2, className="mb-2"),
+                ], width=12, md=2, className="mb-2 px-1"),
                 dbc.Col([
                     html.Div("Adverse Weight", className="fw-bold text-center"),
                     dbc.Input(id="adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
-                ], width=12, md=2, className="mb-2"),
+                ], width=12, md=2, className="mb-2 px-1"),
                 dbc.Col([
                     html.Div("Severely Adverse Weight", className="fw-bold text-center"),
                     dbc.Input(id="severely-adverse-weight", type="number", value=0.3, min=0, max=1, step=0.1, className="form-control text-center")
-                ], width=12, md=2, className="mb-2"),
+                ], width=12, md=2, className="mb-2 px-1"),
             ], className="justify-content-center g-0"),
         ], className="py-2 px-0"),
     ], className="mb-3")
@@ -247,9 +247,9 @@ app.layout = dbc.Container([
                 dbc.Tab(label="Model Explanation", tab_id="model-explanation")
             ], id="tabs", active_tab="model"),
             html.Div(id="tab-content", className="mt-4"),
-        ], width=12, lg=10, className="mx-auto")
+        ], width=12, className="mx-auto")
     )
-], fluid=True, className="px-4")
+], fluid=True, className="px-2")
 
 @app.callback(Output("tab-content", "children"), Input("tabs", "active_tab"))
 def render_tab_content(active_tab):
@@ -451,7 +451,7 @@ def update_results(n_clicks, pool_inputs, economic_inputs, pd_multiplier, lgd_mu
             dbc.Row([
                 dbc.Col([summary_table], width=12, lg=6, className="mb-3"),
                 dbc.Col([top_5_table], width=12, lg=6, className="mb-3 mt-3 mt-lg-0")
-            ], className="g-0")
+            ], className="g-0 gx-4")
         ], className="py-2")
     ], className="mb-3")
 
